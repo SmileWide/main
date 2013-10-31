@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<smile version="1.0" id="Network1" numsamples="1000" discsamples="10000">
+	<nodes>
+		<cpt id="Class">
+			<state id="Happy" />
+			<state id="Sad" />
+			<probabilities>0.6 0.4</probabilities>
+		</cpt>
+		<cpt id="Size">
+			<state id="Fat" />
+			<state id="Thin" />
+			<parents>Class</parents>
+			<probabilities>0.2 0.8 0.8 0.2</probabilities>
+		</cpt>
+		<cpt id="Drink">
+			<state id="None" />
+			<state id="Lots" />
+			<state id="Little" />
+			<parents>Class</parents>
+			<probabilities>0.4 0.4 0.2 0.4 0.2 0.4</probabilities>
+		</cpt>
+	</nodes>
+	<extensions>
+		<genie version="1.0" app="GeNIe 2.0.4535.0" name="Happiness" faultnameformat="nodestate">
+			<node id="Class">
+				<name>Class</name>
+				<interior color="e5f6f7" />
+				<outline color="000080" />
+				<font color="000000" name="Arial" size="8" />
+				<position>321 170 366 198</position>
+			</node>
+			<node id="Size">
+				<name>Size</name>
+				<interior color="e5f6f7" />
+				<outline color="000080" />
+				<font color="000000" name="Arial" size="8" />
+				<position>262 285 303 310</position>
+			</node>
+			<node id="Drink">
+				<name>Drink</name>
+				<interior color="e5f6f7" />
+				<outline color="000080" />
+				<font color="000000" name="Arial" size="8" />
+				<position>384 286 427 312</position>
+			</node>
+		</genie>
+	</extensions>
+</smile>

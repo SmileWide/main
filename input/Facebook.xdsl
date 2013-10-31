@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<smile version="1.0" id="Network1" numsamples="1000" discsamples="10000">
+	<nodes>
+		<cpt id="Sex">
+			<state id="male" />
+			<state id="female" />
+			<probabilities>0.5 0.5</probabilities>
+		</cpt>
+		<cpt id="Age">
+			<state id="lt15" />
+			<state id="a15_20" />
+			<state id="a21_30" />
+			<state id="a31_40" />
+			<state id="a41_50" />
+			<state id="a51_60" />
+			<state id="a61_70" />
+			<state id="gt70" />
+			<probabilities>0.5 0.5 0 0 0 0 0 0</probabilities>
+		</cpt>
+		<cpt id="FirstName">
+			<state id="Dummy1" />
+			<state id="Dummy2" />
+			<parents>Sex</parents>
+			<probabilities>0.5 0.5 0.5 0.5</probabilities>
+		</cpt>
+		<cpt id="MiddleName">
+			<state id="Dummy1" />
+			<state id="Dummy2" />
+			<parents>Sex</parents>
+			<probabilities>0.5 0.5 0.5 0.5</probabilities>
+		</cpt>
+		<cpt id="IsAppUser">
+			<state id="True" />
+			<state id="False" />
+			<parents>Age</parents>
+			<probabilities>0.2 0.8 0.3 0.7 0.5 0.5 0.5 0.5 0.5 0.5 0.6 0.4 0.7 0.3 0.9 0.1</probabilities>
+		</cpt>
+		<cpt id="FriendCount">
+			<state id="lt10" />
+			<state id="c11_20" />
+			<state id="c21_50" />
+			<state id="c51_100" />
+			<state id="c101_200" />
+			<state id="c201_500" />
+			<state id="gt500" />
+			<parents>Age Sex</parents>
+			<probabilities>0.1 0.2 0.15 0.25 0.1 0.1 0.1 0.4 0.1 0.1 0.1 0.05 0.15 0.1 0.15 0.15 0.15 0.15 0.1 0.2 0.1 0.125 0.125 0.1 0.15 0.2 0.12 0.18 0.1413827230312456 0.1413827230312456 0.02969037183656156 0.1413827230312456 0.1413827230312456 0.2633960130072105 0.1413827230312456 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429 0.1428571428571429</probabilities>
+		</cpt>
+		<cpt id="LikesCount">
+			<state id="lt100" />
+			<state id="c101_200" />
+			<state id="c201_500" />
+			<state id="c500_1000" />
+			<state id="c1001_5000" />
+			<state id="gt5000" />
+			<parents>FriendCount IsAppUser</parents>
+			<probabilities>0.1 0.2 0.2 0.3 0.1 0.1 0.1 0.1 0.2 0.3 0.1 0.2 0.2 0.1 0.1 0.2 0.2 0.2 0.13 0.17 0.2 0.25 0.15 0.1 0.1 0.1 0.1 0.1 0.1 0.5 0.2 0.2 0.2 0.2 0.1 0.1 0.15 0.15 0.1 0.1 0.25 0.25 0.1 0.2 0.2 0.3 0.1 0.1 0.05 0.05 0.1 0.2 0.3 0.3 0.1 0.15 0.1 0.15 0.2 0.3 0.1 0.2 0.3 0.01 0.01 0.38 0.15 0.15 0.15 0.15 0.3 0.1 0.3 0.2 0.1 0.05 0.05 0.3 0.25 0.25 0.2 0.2 0.04 0.06</probabilities>
+		</cpt>
+	</nodes>
+	<extensions>
+		<genie version="1.0" app="GeNIe 2.0.4535.0" name="Network1" faultnameformat="nodestate">
+			<node id="Sex">
+				<name>Sex</name>
+				<interior color="e5f6f7" />
+				<outline color="000080" />
+				<font color="000000" name="Arial" size="11" bold="true" />
+				<position>178 162 265 219</position>
+			</node>
+			<node id="Age">
+				<name>Age</name>
+				<interior color="e5f6f7" />
+				<outline color="000080" />
+				<font color="000000" name="Arial" size="11" bold="true" />
+				<position>579 160 679 215</position>
+			</node>
+			<node id="FirstName">
+				<name>FirstName</name>
+				<interior color="e5f6f7" />
+				<outline color="000080" />
+				<font color="000000" name="Arial" size="10" bold="true" />
+				<position>108 262 193 321</position>
+			</node>
+			<node id="MiddleName">
+				<name>MiddleName</name>
+				<interior color="e5f6f7" />
+				<outline color="000080" />
+				<font color="000000" name="Arial" size="10" bold="true" />
+				<position>241 262 344 321</position>
+			</node>
+			<node id="IsAppUser">
+				<name>IsAppUser</name>
+				<interior color="e5f6f7" />
+				<outline color="000080" />
+				<font color="000000" name="Arial" size="10" bold="true" />
+				<position>613 264 701 319</position>
+			</node>
+			<node id="FriendCount">
+				<name>FriendCount</name>
+				<interior color="e5f6f7" />
+				<outline color="000080" />
+				<font color="000000" name="Arial" size="10" bold="true" />
+				<position>448 321 552 380</position>
+			</node>
+			<node id="LikesCount">
+				<name>LikesCount</name>
+				<interior color="e5f6f7" />
+				<outline color="000080" />
+				<font color="000000" name="Arial" size="10" bold="true" />
+				<position>608 395 696 452</position>
+			</node>
+		</genie>
+	</extensions>
+</smile>

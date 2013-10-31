@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<smile version="1.0" id="Sub0" numsamples="1000" discsamples="10000">
+	<nodes>
+		<cpt id="PaymentHistory">
+			<state id="Excellent" />
+			<state id="Aceptable" />
+			<state id="NoAceptable" />
+			<state id="Without_Reference" />
+			<probabilities>0.25 0.25 0.25 0.25</probabilities>
+		</cpt>
+		<cpt id="WorkHistory">
+			<state id="Stable" />
+			<state id="Unstable" />
+			<state id="Justified_no_work" />
+			<state id="Unjustified_no_work" />
+			<probabilities>0.25 0.25 0.25 0.25</probabilities>
+		</cpt>
+		<cpt id="Reliability">
+			<state id="Reliable" />
+			<state id="Unreliable" />
+			<parents>PaymentHistory WorkHistory</parents>
+			<probabilities>0.99 0.01 0.7 0.3 0.7 0.3 0.5 0.5 0.7 0.3 0.55 0.45 0.6 0.4 0.4 0.6 0.196429 0.803571 0.01 0.99 0.1 0.9 0.01 0.99 0.7 0.3 0.3 0.7 0.5 0.5 0.2 0.8</probabilities>
+		</cpt>
+		<cpt id="Debit">
+			<state id="a0_11100" />
+			<state id="a11101_25900" />
+			<state id="a25901_more" />
+			<probabilities>0.333333 0.333333 0.333333</probabilities>
+		</cpt>
+		<cpt id="Income">
+			<state id="s0_30000" />
+			<state id="s30001_70000" />
+			<state id="s70001_more" />
+			<probabilities>0.333333 0.333333 0.333333</probabilities>
+		</cpt>
+		<cpt id="RatioDebInc">
+			<state id="Favorable" />
+			<state id="Unfavorable" />
+			<parents>Debit Income</parents>
+			<probabilities>0.5 0.5 0.8 0.2 0.999 0.001 0.001 0.999 0.5 0.5 0.8 0.2 0.001 0.999 0.1 0.9 0.5 0.5</probabilities>
+		</cpt>
+		<cpt id="Assets">
+			<state id="wealthy" />
+			<state id="average" />
+			<state id="poor" />
+			<probabilities>0.333333 0.333333 0.333333</probabilities>
+		</cpt>
+		<cpt id="Worth">
+			<state id="High" />
+			<state id="Medium" />
+			<state id="Low" />
+			<parents>Income Assets</parents>
+			<probabilities>0.899 0.1 0.001 0.001 0.3 0.699 0.001 0.1 0.899 0.989 0.01 0.001 0.699 0.3 0.001 0.1 0.8 0.1 0.989 0.01 0.001 0.90734 0.09174300000000001 0.0009170000000000001 0.69 0.3 0.01</probabilities>
+		</cpt>
+		<cpt id="Profession">
+			<state id="High_income_profession" />
+			<state id="Medium_income_profession" />
+			<state id="Low_income_profession" />
+			<probabilities>0.333333 0.333333 0.333333</probabilities>
+		</cpt>
+		<cpt id="FutureIncome">
+			<state id="Promissing" />
+			<state id="Not_promissing" />
+			<parents>Worth Profession</parents>
+			<probabilities>0.99 0.01 0.8 0.2 0.6 0.4 0.85 0.15 0.6 0.4 0.4 0.6 0.8 0.2 0.4 0.6 0.01 0.99</probabilities>
+		</cpt>
+		<cpt id="Age">
+			<state id="a16_21" />
+			<state id="a22_65" />
+			<state id="a66_up" />
+			<probabilities>0.333333 0.333333 0.333333</probabilities>
+		</cpt>
+		<cpt id="CreditWorthiness" target="true">
+			<state id="Positive" />
+			<state id="Negative" />
+			<parents>Reliability RatioDebInc FutureIncome Age</parents>
+			<probabilities>0.9 0.1 0.908257 0.09174300000000001 0.8 0.2 0.7 0.3 0.8 0.2 0.6 0.4 0.7 0.3 0.727273 0.272727 0.7 0.3 0.25 0.75 0.4 0.6 0.25 0.75 0.7 0.3 0.8 0.2 0.5 0.5 0.3 0.7 0.4 0.6 0.2 0.8 0.5 0.5 0.5 0.5 0.4 0.6 0.001 0.999 0.001 0.999 0.001 0.999</probabilities>
+		</cpt>
+	</nodes>
+	<extensions>
+		<genie version="1.0" app="GeNIe 2.0.4779.0" name="Credit worthiness assessment by Gerardina Hernandez" faultnameformat="nodestate">
+			<comment>A simple network for assessing credit worthiness of an individual, developed by Gerardina Hernandez as a class homework at the University of Pittsburgh.\nNote that all parentless nodes are described by uniform distributions. This is a weakness of the model, although it is offset by the fact that all these nodes will usually be observed and the network will compute the probability distribution over credit worthiness correctly.\nAnother element of this model is that only the node CreditWorthiness is of interest to the user and is designated as a target.</comment>
+			<node id="PaymentHistory">
+				<name>Payment History</name>
+				<interior color="e5f6f7" />
+				<outline color="0000bb" />
+				<font color="000000" name="Arial" size="8" />
+				<position>169 49 262 79</position>
+			</node>
+			<node id="WorkHistory">
+				<name>Work History</name>
+				<interior color="e5f6f7" />
+				<outline color="0000bb" />
+				<font color="000000" name="Arial" size="8" />
+				<position>229 90 310 120</position>
+			</node>
+			<node id="Reliability">
+				<name>Reliability</name>
+				<interior color="e5f6f7" />
+				<outline color="0000bb" />
+				<font color="000000" name="Arial" size="8" />
+				<position>182 127 252 157</position>
+			</node>
+			<node id="Debit">
+				<name>Debit</name>
+				<interior color="e5f6f7" />
+				<outline color="0000bb" />
+				<font color="000000" name="Arial" size="8" />
+				<position>118 10 188 40</position>
+			</node>
+			<node id="Income">
+				<name>Income</name>
+				<interior color="e5f6f7" />
+				<outline color="0000bb" />
+				<font color="000000" name="Arial" size="8" />
+				<position>33 11 103 41</position>
+			</node>
+			<node id="RatioDebInc">
+				<name>Ratio of Debts to Income</name>
+				<interior color="e5f6f7" />
+				<outline color="0000bb" />
+				<font color="000000" name="Arial" size="8" />
+				<position>115 92 196 122</position>
+			</node>
+			<node id="Assets">
+				<name>Assets</name>
+				<interior color="e5f6f7" />
+				<outline color="0000bb" />
+				<font color="000000" name="Arial" size="8" />
+				<position>9 76 79 106</position>
+			</node>
+			<node id="Worth">
+				<name>Worth</name>
+				<interior color="e5f6f7" />
+				<outline color="0000bb" />
+				<font color="000000" name="Arial" size="8" />
+				<position>82 137 152 167</position>
+			</node>
+			<node id="Profession">
+				<name>Profession</name>
+				<interior color="e5f6f7" />
+				<outline color="0000bb" />
+				<font color="000000" name="Arial" size="8" />
+				<position>18 173 101 203</position>
+			</node>
+			<node id="FutureIncome">
+				<name>Future Income</name>
+				<interior color="e5f6f7" />
+				<outline color="0000bb" />
+				<font color="000000" name="Arial" size="8" />
+				<position>102 212 192 242</position>
+			</node>
+			<node id="Age">
+				<name>Age</name>
+				<interior color="e5f6f7" />
+				<outline color="0000bb" />
+				<font color="000000" name="Arial" size="8" />
+				<position>232 161 302 191</position>
+			</node>
+			<node id="CreditWorthiness">
+				<name>Credit Worthiness</name>
+				<interior color="e5f6f7" />
+				<outline color="0000bb" />
+				<font color="000000" name="Arial" size="8" />
+				<position>189 266 289 296</position>
+			</node>
+			<textbox>
+				<caption>A simple network for assessing credit worthiness of an individual, developed by Gerardina Hernandez as a class homework at the University of Pittsburgh.\nNote that all parentless nodes are described by uniform distributions. This is a weakness of the model, although it is offset by the fact that all these nodes will usually be observed and the network will compute the probability distribution over credit worthiness correctly.\nAnother element of this model is that only the node CreditWorthiness is of interest to the user and is designated as a target.\n</caption>
+				<font color="3366ff" name="Arial" size="10" bold="true" />
+				<position>318 18 583 242</position>
+			</textbox>
+		</genie>
+	</extensions>
+</smile>

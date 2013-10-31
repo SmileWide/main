@@ -1,0 +1,8 @@
+1001 Aceptable Unjustified_no_work Reliable a25901_more s70001_more Favorable wealthy High Low_income_profession Promissing a16_21 Positive
+1002 NoAceptable Unjustified_no_work Unreliable a0_11100 s0_30000 Favorable wealthy High Medium_income_profession Promissing a16_21 Positive
+1003 Without_Reference Justified_no_work Reliable a11101_25900 s70001_more Unfavorable poor High High_income_profession Promissing a22_65 Positive
+1004 Without_Reference Stable Reliable a0_11100 s70001_more Favorable wealthy High Medium_income_profession Promissing a66_up Negative
+1005 NoAceptable Stable Unreliable a11101_25900 s70001_more Unfavorable average High Low_income_profession Not_promissing a16_21 Negative
+1006 Excellent Justified_no_work Reliable a0_11100 s30001_70000 Favorable wealthy High Low_income_profession Promissing a66_up Positive
+1007 Aceptable Unjustified_no_work Unreliable a0_11100 s70001_more Favorable poor Medium Low_income_profession Not_promissing a66_up Negative
+1008 Aceptable Unstable Unreliable a25901_more s0_30000 Unfavorable wealthy High Low_income_profession Promissing a16_21 Positive

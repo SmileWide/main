@@ -1,0 +1,34 @@
+# Javadoc options file for SMILE-WIDE documentation
+#
+# robert.e.cranfill@boeing.com 27/Sep/2013
+#
+# To generate the Javadocs for SMILE-WIDE, 
+#   javadoc @options.javadoc.text
+#
+
+ -d javadocs
+
+ -sourcepath ./src/main/java/
+
+ -classpath smile.jar;.\libs_for_javadoc\hadoop-common-2.0.0-cdh4.2.0.jar;.\libs_for_javadoc\hadoop-core-2.0.0-mr1-cdh4.2.0.jar;.\libs_for_javadoc\log4j-1.2.17.jar;.\libs_for_javadoc\junit-4.8.2.jar;.\libs_for_javadoc\hadoop-annotations-2.0.0-cdh4.2.0;.\libs_for_javadoc\antlr-runtime-3.4.jar;.\libs_for_javadoc\hive-exec-0.10.0-cdh4.2.0.jar
+
+ -author
+ -bottom '<center><font size="-1">Licensed to the DARPA XDATA project.<br>DARPA XDATA licenses this file to you under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.<br>You may obtain a copy of the License at <a href="http://www.apache.org/licenses/LICENSE-2.0" target="blank">http://www.apache.org/licenses/LICENSE-2.0</a><br>Unless required by applicable law or agreed to in writing, software distributed under the License is  <br><b>DISTRIBUTED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND</b><br>either express or implied. See the License for the specific language governing permissions and limitations under the License.'
+ -group "SMILE-WIDE Packages" "smile.*"
+ -header '<b>SMILE-WIDE </b><br><font size="-1">1.0</font>'
+ -overview ./src/main/java/smile/overview.html
+ -splitindex
+ -use
+ -version
+ -windowtitle 'SMILE-WIDE API Documentation'
+
+smile.wide
+smile.wide.algorithms
+smile.wide.algorithms.em
+smile.wide.counter
+smile.wide.data
+smile.wide.facebook
+smile.wide.hadoop.io
+smile.wide.hive
+# smile.wide.obsolete
+smile.wide.utils

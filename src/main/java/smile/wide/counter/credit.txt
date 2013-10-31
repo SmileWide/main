@@ -1,0 +1,16 @@
+a16_21 average a25901_more Not_promissing s70001_more Excellent Low_income_profession Favorable Reliable * High
+a16_21 average a0_11100 * s30001_70000 Excellent Low_income_profession Favorable Unreliable Justified_no_work High
+a16_21 average a0_11100 Promissing s70001_more Excellent High_income_profession Favorable Unreliable Unstable Medium
+a66_up average a25901_more Promissing s70001_more Excellent High_income_profession * * Justified_no_work High
+a22_65 poor a0_11100 Promissing s30001_70000 Without_Reference High_income_profession Unfavorable * Stable *
+* poor a0_11100 Not_promissing s30001_70000 Aceptable Medium_income_profession Favorable Unreliable Justified_no_work Low
+* average * Promissing * Excellent High_income_profession Unfavorable Reliable Unstable Medium
+a22_65 poor * Promissing s70001_more NoAceptable Medium_income_profession Favorable Unreliable Unstable Medium
+a66_up average a0_11100 Promissing s70001_more * Low_income_profession Favorable Reliable Justified_no_work *
+a16_21 poor a0_11100 Promissing s70001_more Without_Reference Low_income_profession Favorable Unreliable Unstable *
+* average * Promissing s0_30000 Excellent High_income_profession Unfavorable Unreliable Justified_no_work Low
+a16_21 average a0_11100 Promissing s0_30000 Excellent High_income_profession Favorable Reliable Unjustified_no_work Low
+a66_up poor a11101_25900 Promissing s30001_70000 Aceptable Medium_income_profession Favorable * Justified_no_work Medium
+a16_21 average a0_11100 Promissing s30001_70000 Aceptable Medium_income_profession Favorable Unreliable Unstable High
+a16_21 average a25901_more Promissing * NoAceptable * Unfavorable Unreliable Unjustified_no_work Medium
+a16_21 poor a11101_25900 Promissing s70001_more Aceptable Medium_income_profession Favorable Reliable Unstable High
