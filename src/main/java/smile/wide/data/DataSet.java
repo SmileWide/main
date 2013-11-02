@@ -1,19 +1,3 @@
-/*
-             Licensed to the DARPA XDATA project.
-       DARPA XDATA licenses this file to you under the 
-         Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
-           You may obtain a copy of the License at
-
-         http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing,
- software distributed under the License is distributed on an
- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-                 either express or implied.                    
-   See the License for the specific language governing
-     permissions and limitations under the License.
-*/
 package smile.wide.data;
 
 import java.net.URI;
@@ -39,10 +23,9 @@ public abstract class DataSet {
 	
 	// subclasses should probably know how to parse the underlying serialized form	
 	
-	/** 
-	 * Where is this dataset accessible?
+	/** Where is this dataset accessible?
 	 * 
-	 * @return A URI for the location of this dataset.
+	 * @return
 	 */
 	abstract public URI location();
 	
@@ -70,4 +53,19 @@ public abstract class DataSet {
 	 */
 	abstract public int instanceIDColumnIndex();
 	
+	abstract public int getNumberOfVariables();
+	
+	abstract public int getNumberOfRecords();
+	
+	abstract public boolean isDiscrete(int column);
+	
+	abstract public String[] getStateNames(int column);
+	
+	abstract public int getInt(int column, int record);
+	
+	abstract public double getDouble(int column, int record);
+	
+	abstract public String getId(int column);
+	
+	abstract public boolean isMissing(int column, int record);
 }

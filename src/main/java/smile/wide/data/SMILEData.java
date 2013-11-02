@@ -1,19 +1,3 @@
-/*
-             Licensed to the DARPA XDATA project.
-       DARPA XDATA licenses this file to you under the 
-         Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
-           You may obtain a copy of the License at
-
-         http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing,
- software distributed under the License is distributed on an
- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-                 either express or implied.                    
-   See the License for the specific language governing
-     permissions and limitations under the License.
-*/
 package smile.wide.data;
 
 import java.net.URI;
@@ -101,6 +85,40 @@ public class SMILEData extends DataSet {
 	@Override
 	public int instanceIDColumnIndex() {		
 		return -1;
+	}
+	@Override
+	public int getNumberOfVariables() {
+		return data.getVariableCount();
+	}
+	@Override
+	public int getNumberOfRecords() {
+		return data.getRecordCount();
+	}
+	@Override
+	public boolean isDiscrete(int column) {
+		// TODO Auto-generated method stub
+		return true;
+	}
+	@Override
+	public String[] getStateNames(int column) {
+		return data.getStateNames(column);
+	}
+	@Override
+	public int getInt(int column, int record) {
+		return data.getInt(column, record);
+	}
+	@Override
+	public double getDouble(int column, int record) {
+		return data.getFloat(column, record);
+	}
+	@Override
+	public String getId(int column) {
+		return data.getVariableId(column);
+	}
+	@Override
+	public boolean isMissing(int column, int record) {
+		// TODO Auto-generated method stub
+		return (data.getInt(column, record) == smile.learning.DataSet.DefaultMissingInt) || (data.getFloat(column, record) == smile.learning.DataSet.DefaultMissingFloat);
 	}
 	
 }

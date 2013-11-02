@@ -95,4 +95,52 @@ public class FacebookDataset extends DataSet {
 		// TODO Auto-generated method stub
 
 	}
+
+	@Override
+	public int getNumberOfVariables() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getNumberOfRecords() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public boolean isDiscrete(int column) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public String[] getStateNames(int column) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int getInt(int column, int record) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getDouble(int column, int record) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public String getId(int column) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean isMissing(int column, int record) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
