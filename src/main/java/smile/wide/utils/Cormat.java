@@ -3,12 +3,23 @@ package smile.wide.utils;
 import java.util.ArrayList;
 import smile.wide.data.DataSet;
 
+/** Correlation Matrix datastructure 
+ * used for continuous independence test
+ * @author m.a.dejongh@gmail.com
+ */
 public class Cormat {
+	/** Number of variables*/
     int nvar;
+    /** Number of records*/
     int n;
+    /** 2d array that holds the correlation matrix */
     ArrayList<ArrayList<Double> > cm=null;
 
-	
+	/**Constructor
+	 * Using the dataset, calculates the
+	 * correlation matrix
+	 * @param ds
+	 */
 	public Cormat(DataSet ds)
 	{
 	    nvar = ds.getNumberOfVariables();
@@ -60,19 +71,33 @@ public class Cormat {
 	    }
 	}
 
+	/** Returns number of variables
+	 * 
+	 * @return number of variables
+	 */
 	public int numVars()
 	{
 	    return nvar;
 	}
 
+	/**Returns number of records
+	 * 
+	 * @return number of records
+	 */
 	public int numRecords()
 	{
 	    return n;
 	}
 
+	/**Returns correlation for variable x and y
+	 * 
+	 * @param x variable
+	 * @param y variable
+	 * @param z set of conditioning variable
+	 * @return rho, correlation between x and y
+	 */
 	public double GetRho(int x, int y, ArrayList<Integer> z)
 	{
-	    // TODO: caching
 	    if (z.size() == 0)
 	    {
 	        return cm.get(x).get(y);
@@ -91,5 +116,4 @@ public class Cormat {
 	        return (rho_xy - rho_xz0 * rho_yz0) / (Math.sqrt(1 - rho_xz0 * rho_xz0) * Math.sqrt(1 - rho_yz0 * rho_yz0));
 	    }
 	}
-
 }

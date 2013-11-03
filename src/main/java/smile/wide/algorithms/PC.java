@@ -37,26 +37,24 @@ public class PC {
         return sepset.contains(e);
     }
 
-	/** Learn function, takes dataset and pattern as input.
-	 *  currently func header is c-style will be updated.
+	/** Learn function, takes dataset as input.
 	 *  learns a network structure using the PC algorithm
 	 *  returns a PDAG, or Pattern.
-	 *  @param dataset empty pattern
-	 *  @return int with status.
+	 *  @param dataset
+	 *  @return pattern.
 	 */	
-    public int Learn( DataSet ds, Pattern pat) 
+    public Pattern Learn( DataSet ds) 
     {
+    	Pattern pat = new Pattern();
         int nvar = ds.getNumberOfVariables();
         int n = ds.getNumberOfRecords();
         if (n < 3)
         {
-//            ErrorH.LogError(DSL_GENERAL_ERROR, "pc: too few data points");
-            return -1;
+        	throw new IllegalArgumentException("pc: too few data points");
         }
         if (nvar < 2)
         {
-//            ErrorH.LogError(DSL_GENERAL_ERROR, "pc: too few variables");
-            return -1;
+        	throw new IllegalArgumentException("pc: too few variables");
         }
 
         // check if all vars are discrete or continuous
@@ -76,8 +74,7 @@ public class PC {
 
         if (disc && cont)
         {
-//            ErrorH.LogError(DSL_GENERAL_ERROR, "pc: a mix of continuous and discrete variables is not allowed");
-            return -1;
+        	throw new IllegalArgumentException("pc: a mix of continuous and discrete variables is not allowed");
         }
 
         // check for constants
@@ -132,8 +129,7 @@ public class PC {
                 }
             }
             //throw exception with message?
-            System.out.println(vars);
-            return -1;
+        	throw new IllegalArgumentException("pc: constant variables not allowed: "+vars);
         }
 
         // check if there are no missing values
@@ -144,7 +140,7 @@ public class PC {
                 if (ds.isMissing(v, r))
                 {
                 	//missing values
-                    return -1;
+                	throw new IllegalArgumentException("pc: a missing values not allowed");
                 }
             }
         }
@@ -333,8 +329,7 @@ public class PC {
             }
         }
         // done
-        return 0;
+        return pat;
     }
-    
 }
 

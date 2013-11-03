@@ -12,14 +12,30 @@ import smile.wide.utils.LazyADTree;
 import smile.wide.utils.Pair;
 import smile.wide.utils.SMILEMath;
 
+/** Independence test for continuous data 
+ * (Assumes Gaussian distributions)
+ * Is initialized with a DataSet
+ * calculates p-value of test
+ * @author m.a.dejongh@gmail.com
+ */
 public class DiscIndependenceTest extends IndependenceTest {
-    LazyADTree ad = null;
-
+	/**AD Tree datastructure, contains counts*/
+	LazyADTree ad = null;
+	/**Constructor
+	 * initializes AD Tree structure
+	 * @param tds
+	 */
 	DiscIndependenceTest(DataSet tds) {
 		super(tds);
         ad = new LazyADTree(ds);
 	}
-		
+	/**calcPValue
+	 * discrete independence test
+	 * calculates the p-value
+	 * @param x variable
+	 * @param y variable
+	 * @param z list with conditioning variables	
+	 */
 	@Override
 	public double calcPValue(int x, int y, ArrayList<Integer> z) {
         int i;
@@ -143,10 +159,10 @@ public class DiscIndependenceTest extends IndependenceTest {
             }
             int xi_k = ad.getCount(tmp);
     		if(xi_k == 0 ) {
-    				ArrayList<Pair<Integer,Integer>> stupid = new ArrayList<Pair<Integer,Integer>>();
+    				ArrayList<Pair<Integer,Integer>> templst = new ArrayList<Pair<Integer,Integer>>();
     				for(Pair<Integer,Integer> p: tmp)
-    					stupid.add(new Pair<Integer,Integer>(p.getFirst(),p.getSecond()));
-    				test.add(stupid);
+    					templst.add(new Pair<Integer,Integer>(p.getFirst(),p.getSecond()));
+    				test.add(templst);
     		}
             idx = 0;
             for (j = 0; j < nvars; j++)
@@ -164,10 +180,10 @@ public class DiscIndependenceTest extends IndependenceTest {
     		if(x_jk == 0)
     		{
     				tmp.clone();
-    				ArrayList<Pair<Integer,Integer>> stupid = new ArrayList<Pair<Integer,Integer>>();
+    				ArrayList<Pair<Integer,Integer>> templst = new ArrayList<Pair<Integer,Integer>>();
     				for(Pair<Integer,Integer> p: tmp)
-    					stupid.add(new Pair<Integer,Integer>(p.getFirst(),p.getSecond()));
-    				test.add(stupid);
+    					templst.add(new Pair<Integer,Integer>(p.getFirst(),p.getSecond()));
+    				test.add(templst);
 			}
             idx = 0;
             tmp.subList((nvars-2),tmp.size()).clear();
@@ -250,5 +266,4 @@ public class DiscIndependenceTest extends IndependenceTest {
             dof = 1;
     	return (double) SMILEMath.gammq((double) (0.5 * dof), (double) (0.5 * g2));
 	}
-
 }

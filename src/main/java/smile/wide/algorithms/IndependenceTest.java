@@ -149,7 +149,7 @@ public abstract class IndependenceTest {
      * @param binvec array that represents all subsets
      * @param cur pointer in array
      * @param ones counter
-     * @return
+     * @return true, more subsets to consider, false we are done
      */
     private boolean NxtSubset(ArrayList<Boolean> binvec, MutableInt cur, MutableInt ones)
     {
@@ -202,10 +202,10 @@ public abstract class IndependenceTest {
     /** p-value calculation function.
      * Effectively the function that calculates if
      * variables x and y are independent given z
-     * @param x
-     * @param y
-     * @param z
-     * @return
+     * @param x variable 
+     * @param y variable 
+     * @param z list of conditioning variables
+     * @return p-value of independence test
      */
     protected abstract double calcPValue(int x, int y, ArrayList<Integer> z);
 }

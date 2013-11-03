@@ -9,55 +9,100 @@ import org.apache.commons.lang.mutable.MutableInt;
 
 import smile.wide.data.DataSet;
 
-class PairComparator implements Comparator<Pair<Integer,Integer>> {//OK
+/** Comparator class for Pair objects 
+ * allows for sorting of Pairs by
+ * their first element
+ * @author m.a.dejongh@gmail.com
+ */
+class PairComparator implements Comparator<Pair<Integer,Integer>> {
+	/**compare function*/
 	@Override
 	public int compare(Pair<Integer, Integer> arg0, Pair<Integer, Integer> arg1) {
 		return arg0.getFirst().compareTo(arg1.getFirst());
 	}
 }
+
+/** LazyVary node datastructure 
+ * Represents a vary node
+ * of an AD tree
+ * @author m.a.dejongh@gmail.com
+ */
 class LazyVaryNode//OK
 {
-    LazyVaryNode() { adnodes = null;}
+	/**constructor*/
+	LazyVaryNode() { adnodes = null;}
+	/**array with adnodes*/
 	ArrayList<LazyADNode> adnodes;
 };
 
-class LazyADNode//OK
+/** LazyVary node datastructure 
+ * Represents an AD node
+ * of an AD tree
+ * @author m.a.dejongh@gmail.com
+ */
+class LazyADNode
 {
-    LazyADNode() { varynodes = null; count = 0; }
+	/**constructor, sets array to null and inits count to 0*/
+	LazyADNode() { varynodes = null; count = 0; }
+	/**constructor, sets array to null, inits count to 0, and sets max to m*/
     LazyADNode(int m) { varynodes = null; count = 0; max = m;}
-	int count;
+    /** count for current variable assignment*/
+    int count;
+    /** max number of children*/
 	int max;
 	ArrayList<LazyVaryNode> varynodes;
 };
 
+/**ADTree class
+ * the class is "lazy" since entries
+ * are only added to the tree when 
+ * they are necessary
+ * @author m.a.dejongh@gmail.com
+ */
 public class LazyADTree {
-
+	/**number of variables*/
 	int nvar;
+	/**arry with number of states
+	 * for each variable
+	 */
 	ArrayList<Integer> nstates;
+	/**root node of the AD tree*/
 	LazyADNode root;
-
+	/**dataset to base the tree on*/
 	DataSet ds;
 
+	/**returns number of variables*/
 	public int numVars() { 
 		return nvar; 
 	}
-	
+	/**returns number of states for a variables
+	 * 
+	 * @param v variable
+	 * @return number of states
+	 */
 	public int numStates(int v) {
 		return nstates.get(v);
 	}
 
+	/**construtor
+	 * initializes the AD tree
+	 * using the dataset
+	 * @param ds_ dataset
+	 */
 	public LazyADTree(DataSet ds_)
 	{
 		ds = ds_;
 		create();
 	}
 
+	/**clears the tree*/
 	void kill()
 	{
 		root.varynodes.clear();
 		root = null;
 	}
 
+	/**creates a new tree*/
 	void create()
 	{
 		nvar = ds.getNumberOfVariables();
@@ -75,6 +120,10 @@ public class LazyADTree {
 	    root = new LazyADNode(nvar);
 		root.count = ds.getNumberOfRecords();
 	}
+	
+	/**returns the co-occurrence count of the provided variable assignment
+	 * @param query, variable assignment
+	 * */
 	public int getCount(ArrayList<Pair<Integer, Integer> > _query)
 	{
 		boolean dosort = false;
@@ -114,6 +163,11 @@ public class LazyADTree {
 		}
 	}
 
+	/**function that traverses the tree to get the count
+	 * @param current AD node
+	 * @param query, variable assignment
+	 * @param node index of variable assignment
+	 * */
 	int retrieveCount(LazyADNode ad, ArrayList<Pair<Integer, Integer> > query, MutableInt idx) {
 		while (idx.intValue() >= 0) {
 			if (ad.varynodes == null) {
@@ -142,6 +196,12 @@ public class LazyADTree {
 		return ad.count;
 	}
 
+	/** if counts a not yet present in the tree
+	 * 
+	 * @param root current root node
+	 * @param query variable assignment
+	 * @param idx node index of variable assignment
+	 */
 	void updateTreeCounts(LazyADNode root, ArrayList<Pair<Integer, Integer> > query, int idx) {
 		LazyADNode tmpad;
 		ListIterator<Pair<Integer,Integer>> tmpq;

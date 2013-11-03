@@ -3,16 +3,30 @@ package smile.wide.utils;
 import java.util.ArrayList;
 import java.util.Collections;
 
+/** Pattern class, contains PDAGs aka
+ * Patterns. Is used to represent the
+ * structure learned from data using
+ * the PC algorithm
+ * @author m.a.dejongh@gmail.com
+ */
 public class Pattern {
-	
+	/**definition for possible types of edges*/
 	public enum EdgeType {None, Undirected, Directed};
+	/**2d array that contains the adjacency matrix*/
 	ArrayList<ArrayList<EdgeType> > mat = new ArrayList<ArrayList<EdgeType> >();
 	
+	/**returns number of variables
+	 * @return number of variables
+	 * */
 	public int getSize()
 	{
 	    return mat.size();
 	}
 
+	/**sets size of pattern
+	 * sets number of variables
+	 * @param size number of variables
+	 */
 	public void setSize(int size)
 	{
 		mat = new ArrayList<ArrayList<EdgeType> >();
@@ -22,16 +36,45 @@ public class Pattern {
 	    }
 	}
 
+	/**returns edge between from and to
+	 * @param from node
+	 * @param to node
+	 * @return edge
+	 */
 	public EdgeType getEdge(int from, int to)
 	{
 	    return mat.get(from).get(to);
 	}
 
+	/**sets edge between from and to
+	 * @param from node
+	 * @param to node
+	 * @param type edge
+	 */
 	public void setEdge(int from, int to, EdgeType type)
 	{
 	    mat.get(from).set(to,type);
 	}
 
+	/**function checks if there is
+	 * a directed path between from and to
+	 * @param from node
+	 * @param to node
+	 * @return true/false
+	 */
+	public boolean hasDirectedPath(int from, int to) {
+	    ArrayList<Boolean> visited = new ArrayList<Boolean>(Collections.nCopies(getSize(), false));
+	    return hasDirectedPathRec(this, from, to, visited);
+	}
+
+	/**helper function for checking if there
+	 * is a directed path between from and to
+	 * @param pat current pattern
+	 * @param from node
+	 * @param to node
+	 * @param visited set indicating which nodes have been visited
+	 * @return true/false
+	 */
 	boolean hasDirectedPathRec(Pattern pat, int from, int to, ArrayList<Boolean> visited)
 	{
 	    // don't go through bi-directed edges!
@@ -52,11 +95,9 @@ public class Pattern {
 	    return false;
 	}
 
-	public boolean hasDirectedPath(int from, int to) {
-	    ArrayList<Boolean> visited = new ArrayList<Boolean>(Collections.nCopies(getSize(), false));
-	    return hasDirectedPathRec(this, from, to, visited);
-	}
-
+	/**function checks if graph has a cycle
+	 * @return true/false
+	 */
 	public boolean hasCycle() {
 	    int size = mat.size();
 	    for (int i = 0; i < size; i++) {
@@ -69,6 +110,9 @@ public class Pattern {
 	    return false;
 	}
 
+	/**checks if graph is a Directed Acyclic Graph
+	 * @return true/false
+	 */
 	public boolean IsDAG() {
 	    // check for undirected and bidirectional edges
 	    int nvar = mat.size();
@@ -83,26 +127,7 @@ public class Pattern {
 	    return !hasCycle();
 	}
 
-	boolean hasIncomingEdge(int to) {
-	    for (int from = 0; from < getSize(); from++) {
-	        if (from == to) continue;
-	        if (getEdge(from, to) == EdgeType.Directed) {
-	            return true;
-	        }
-	    }
-	    return false;
-	}
-
-	boolean hasOutgoingEdge(int from) {
-	    for (int to = 0; to < getSize(); to++) {
-	        if (from == to) continue;
-	        if (getEdge(from, to) == EdgeType.Directed) {
-	            return true;
-	        }
-	    }
-	    return false;
-	}
-
+	/**Prints pattern to screen*/
 	public void Print() {
 	    int size = mat.size();
 	    System.out.println("None: 0");
@@ -118,24 +143,8 @@ public class Pattern {
 	            case Undirected: System.out.print("1");break;
 	            case Directed: System.out.print("2");break;
 	            }
-	            
 	        }
 	        System.out.println();
 	    }
-	}
-
-	void GetAdjacentNodes(final int node, ArrayList<Integer> adj) {
-		adj.clear();
-		final int size = mat.size();
-		for(int i=0;i < size; ++i) {
-			if(i!=node) {
-				if(mat.get(node).get(i) != EdgeType.None) {
-					adj.add(i);
-				}
-				else if(mat.get(i).get(node) != EdgeType.None) {
-					adj.add(i);
-				}
-			}
-		}
 	}
 }

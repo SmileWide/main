@@ -16,7 +16,7 @@ public class PCTest {
 		alg.significance = 0.05;
 		//Test the PC class with same dataset. print out result
 		System.out.println("Test PC class");
-		alg.Learn(ds, pat);
+		pat = alg.Learn(ds);
 		System.out.println();
 		System.out.println("Result");
 		pat.Print();

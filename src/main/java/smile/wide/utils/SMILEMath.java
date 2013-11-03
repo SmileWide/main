@@ -2,8 +2,13 @@ package smile.wide.utils;
 
 import org.apache.commons.lang.mutable.MutableDouble;
 
+/** Class with a set of math functions
+ * used for (conditional) independence calculations
+ * @author m.a.dejongh@gmail.com
+ */
 public class SMILEMath {
 
+	/**logGamma function*/
 	private static double LogGamma(double xx)
 	{//Copied from Numerical Recipes in C, 2nd edition.
 
@@ -19,9 +24,10 @@ public class SMILEMath {
 	 for (j=0; j<=5; j++) ser += cof[j]/++y;
 	 return -tmp+Math.log(2.5066282746310005*ser/x);
 	}
-	//------------------------------------------------------
-	//Returns the incomplete gamma function Q(a,x) evaluated by its continued
-	//fraction representation as gammcf.  Also returns lnGamma(a) as gln.
+
+	/**Returns the incomplete gamma function Q(a,x) evaluated by its continued
+	* fraction representation as gammcf.  Also returns lnGamma(a) as gln.
+	*/
 	private static void gcf(MutableDouble gammcf, double a, double x, MutableDouble gln)
 	{
 	 int    ITMAX = 100;
@@ -53,10 +59,10 @@ public class SMILEMath {
 	 gammcf.setValue(Math.exp(-x+a*Math.log(x)-(gln.doubleValue()))*h);
 	}
 
-	//------------------------------------------------------
-	//Returns the incomplete gamma function P(a,x) evaluated by
-	//its series representation as gamser.  Also returns ln(Gamma(a) 
-	//as gln.
+	/**Returns the incomplete gamma function P(a,x) evaluated by
+	* its series representation as gamser.  Also returns ln(Gamma(a) 
+	* as gln.
+	*/
 	private static void gser(MutableDouble gamser, double a, double x, MutableDouble gln)
 	{
 	 int    ITMAX = 100;
@@ -68,7 +74,7 @@ public class SMILEMath {
 	 gln.setValue(LogGamma(a));
 	 if (x<=0.0)
 	 {
-	  //std::cout<<"x less than 0 in routine gser".;(throw exception)
+	  //std::cout<<"x less than 0 in routine gser".;(throw exception?)
 	  gamser.setValue(0.0);
 	  return;
 	 }
@@ -91,8 +97,8 @@ public class SMILEMath {
 	  return;
 	 }
 	}
-	//------------------------------------------------------
-	//the incomplete gamma function P(a,x)
+
+	/**the incomplete gamma function P(a,x)*/
 	public static double gammp(double a, double x)
 	{
 	 MutableDouble gamser=new MutableDouble(0.0);
@@ -101,8 +107,7 @@ public class SMILEMath {
 
 	 if (x<0.0 || a<=0.0) 
 	 {
-	//  std::cout<<"Bad Input values into gammp!";
-	  return -1;
+    	throw new IllegalArgumentException("Bad Input values into gammp");
 	 }
 
 	 if (x < (a+1.0))
@@ -116,8 +121,8 @@ public class SMILEMath {
 	  return (double) (1.0-gammcf.doubleValue());
 	 }
 	}
-	//------------------------------------------------------
-	//the incomplete gamma function Q(a,x) def= 1=P(a,x).
+
+	/**the incomplete gamma function Q(a,x) def= 1=P(a,x).*/
 	public static double gammq(double a, double x)
 	{
 	 MutableDouble gamser=new MutableDouble(0.0);
@@ -126,7 +131,7 @@ public class SMILEMath {
 
 	 if (x<0.0 || a<=0.0) 
 	 {
-	  return -1;//throw expection?
+      throw new IllegalArgumentException("Bad Input values into gammq");
 	 }
 	 if (x < (a+1.0))
 	 {
@@ -140,7 +145,7 @@ public class SMILEMath {
 	 }
 	}
 
-	/* normal cdf */
+	/** normal cdf */
 	public static double normalcdf(double z)
 	{
 	    if (z > 6.0)  { return 1.0; }

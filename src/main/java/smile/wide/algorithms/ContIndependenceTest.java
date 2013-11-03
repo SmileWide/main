@@ -6,13 +6,30 @@ import smile.wide.data.DataSet;
 import smile.wide.utils.Cormat;
 import smile.wide.utils.SMILEMath;
 
+/** Independence test for continuous data 
+ * (Assumes Gaussian distributions)
+ * Is initialized with a DataSet
+ * calculates p-value of test
+ * @author m.a.dejongh@gmail.com
+ */
 public class ContIndependenceTest extends IndependenceTest {
-    Cormat cm = null;
+	/**Correlation matrix datastructure*/
+	Cormat cm = null;
 
+	/** Constructor
+	 * calculates correlation matrix
+	 * @param tds
+	 */
 	ContIndependenceTest(DataSet tds) {
 		super(tds);
         cm = new Cormat(ds);
 	}
+	/**Independence test,returns p-value of
+	 * continuous test
+	 * @param x variable
+	 * @param y variable
+	 * @param z set of conditioning variables
+	 */
 	@Override
 	public double calcPValue(int x, int y, ArrayList<Integer> z) {
         // first calculate the partial correlation coefficient
