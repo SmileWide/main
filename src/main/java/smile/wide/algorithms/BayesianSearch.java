@@ -16,6 +16,7 @@
 */
 package smile.wide.algorithms;
 
+
 /** Abstract class for structure learning algorithms based on the
  *  Bayesian Search approach
  * @author m.a.dejongh@gmail.com

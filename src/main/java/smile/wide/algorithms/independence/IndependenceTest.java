@@ -1,4 +1,4 @@
-package smile.wide.algorithms;
+package smile.wide.algorithms.independence;
 
 import java.util.ArrayList;
 import java.util.Collections;

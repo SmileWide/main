@@ -1,4 +1,4 @@
-package smile.wide.algorithms;
+package smile.wide.algorithms.independence;
 
 import java.util.ArrayList;
 
@@ -20,7 +20,7 @@ public class ContIndependenceTest extends IndependenceTest {
 	 * calculates correlation matrix
 	 * @param tds
 	 */
-	ContIndependenceTest(DataSet tds) {
+	public ContIndependenceTest(DataSet tds) {
 		super(tds);
         cm = new Cormat(ds);
 	}

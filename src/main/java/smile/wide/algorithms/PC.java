@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import smile.wide.algorithms.independence.ContIndependenceTest;
+import smile.wide.algorithms.independence.DiscIndependenceTest;
+import smile.wide.algorithms.independence.IndependenceTest;
 import smile.wide.data.DataSet;
 import smile.wide.utils.Pattern;
 

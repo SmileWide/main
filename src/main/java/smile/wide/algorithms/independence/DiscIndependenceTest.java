@@ -1,4 +1,4 @@
-package smile.wide.algorithms;
+package smile.wide.algorithms.independence;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +25,7 @@ public class DiscIndependenceTest extends IndependenceTest {
 	 * initializes AD Tree structure
 	 * @param tds
 	 */
-	DiscIndependenceTest(DataSet tds) {
+	public DiscIndependenceTest(DataSet tds) {
 		super(tds);
         ad = new LazyADTree(ds);
 	}
