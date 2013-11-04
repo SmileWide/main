@@ -5,9 +5,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import smile.wide.algorithms.independence.ContIndependenceTest;
-import smile.wide.algorithms.independence.DiscIndependenceTest;
-import smile.wide.algorithms.independence.IndependenceTest;
 import smile.wide.data.DataSet;
 import smile.wide.utils.Pattern;
 
@@ -177,7 +174,12 @@ public class PC {
             }
         }
         //Execute the independence test step
-        istep.execute(ds, pat, disc, maxAdjacency, significance, sepsets);
+        try {
+			istep.execute(ds, pat, disc, maxAdjacency, significance, sepsets);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
         // step 3: orient edges as v-structure
         for (i = 0; i < nvar; i++)

@@ -11,5 +11,5 @@ import smile.wide.utils.Pattern;
  *
  */
 public abstract class IndependenceStep {
-	public abstract void execute(DataSet ds, Pattern pat, boolean disc, int maxAdjacency, double significance, ArrayList<ArrayList<Set<Integer> > > sepsets);
+	public abstract void execute(DataSet ds, Pattern pat, boolean disc, int maxAdjacency, double significance, ArrayList<ArrayList<Set<Integer> > > sepsets) throws Exception;
 }
