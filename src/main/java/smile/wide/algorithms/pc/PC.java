@@ -1,4 +1,4 @@
-package smile.wide.algorithms;
+package smile.wide.algorithms.pc;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,15 +16,13 @@ import smile.wide.utils.Pattern;
  * @author m.a.dejongh@gmail.com
  */
 public class PC {
+	public IndependenceStep istep = new BasicIndependenceStep();
 	/** maxAdjacency limits the size of the conditioning set
 	 *  that is available for the independence tests*/
     public int maxAdjacency = 8;
     /** signficance determines the significance level to be
      *  used by the independence tests*/
     public double significance=0.05;
-    /** nc is an array that allow variables to be left out
-     *  of the conditioning sets*/
-    ArrayList<Integer> nc = new ArrayList<Integer>();
     
 	/** sepsetHas function, checks if a variable e is present
 	 * in the separator set of variables x and y 
@@ -134,7 +132,6 @@ public class PC {
             //throw exception with message?
         	throw new IllegalArgumentException("pc: constant variables not allowed: "+vars);
         }
-
         // check if there are no missing values
         for (r = 0; r < n; r++)
         {
@@ -168,13 +165,6 @@ public class PC {
         }
 
         // step 2: check for conditional independencies
-        IndependenceTest itest = null;
-        if(disc) {
-        	itest = new DiscIndependenceTest(ds);
-        }
-        else {
-        	itest = new ContIndependenceTest(ds);
-        }
         // create sepsets
         ArrayList<ArrayList<Set<Integer> > > sepsets = new ArrayList<ArrayList<Set<Integer> > >();
         for (int x=0; x< nvar; x++) {
@@ -186,35 +176,8 @@ public class PC {
             	sepsets.get(i).add(new HashSet<Integer>());
             }
         }
-
-        // find conditional independencies
-        int card = 0;
-        while (true)
-        {
-            for (int x = 0; x < nvar; x++)
-            {
-                for (int y = x + 1; y < nvar; y++)
-                {
-                    if (pat.getEdge(x, y) == Pattern.EdgeType.None && pat.getEdge(y, x) == Pattern.EdgeType.None)
-                    {
-                        continue;
-                    }
-                    HashSet<Integer> sepset= new HashSet<Integer>();
-                    if (itest.findCI(pat, card, nc, x, y, sepset, significance))
-                    {
-                        pat.setEdge(x, y, Pattern.EdgeType.None);
-                        pat.setEdge(y, x, Pattern.EdgeType.None);
-                        sepsets.get(x).set(y,sepset);
-                        sepsets.get(y).set(x,sepset);
-                    }
-                }
-            }
-            card++;
-            if (card > nvar - 2 || card > maxAdjacency)
-            {
-                break;
-            }
-        }
+        //Execute the independence test step
+        istep.execute(ds, pat, disc, maxAdjacency, significance, sepsets);
 
         // step 3: orient edges as v-structure
         for (i = 0; i < nvar; i++)
@@ -246,19 +209,6 @@ public class PC {
             }
         }
 
-        // check for cycles and fix them if necessary
-        for (i = 0; i < nvar; i++)
-        {
-            for (int j = 0; j < nvar; j++)
-            {
-                if (i != j && pat.hasDirectedPath(i, j) && pat.hasDirectedPath(j, i))
-                {
-                    // remove orientation to remove cycle
-                    pat.setEdge(i, j, Pattern.EdgeType.Undirected);
-                    pat.setEdge(j, i, Pattern.EdgeType.Undirected);
-                }
-            }
-        }
         // step 4: orient remaining edges
         boolean update = true;
         while (update)

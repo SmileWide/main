@@ -1,6 +1,6 @@
 package smile.wide;
 
-import smile.wide.algorithms.PC;
+import smile.wide.algorithms.pc.PC;
 import smile.wide.data.SMILEData;
 import smile.wide.utils.Pattern;
 

@@ -30,22 +30,21 @@ public abstract class IndependenceTest {
 	 * 
 	 * @param pat current state of the structure
 	 * @param card maximum size of conditioning set
-	 * @param nc list with variables to be left out of conditioning sets
 	 * @param x variable x
 	 * @param y variable y
 	 * @param sepset empty list to be filled with sepset of x and y
 	 * @param signif significance level to be used for the test
 	 * @return true: independent, false: not independent.
 	 */
-    public boolean findCI(Pattern pat, int card,  ArrayList<Integer> nc, int x, int y, HashSet<Integer> sepset, double signif)
+    public boolean findCI(Pattern pat, int card, int x, int y, HashSet<Integer> sepset, double signif)
     {
         MutableDouble pvalxy = new MutableDouble(0);
         HashSet<Integer> sepsetxy = new HashSet<Integer>();
-        checkCI(pat, card, nc, x, y, pvalxy, sepsetxy, signif);
+        checkCI(pat, card, x, y, pvalxy, sepsetxy, signif);
 
         MutableDouble pvalyx = new MutableDouble(0);
         HashSet<Integer> sepsetyx = new HashSet<Integer>();
-        checkCI(pat, card, nc, y, x, pvalyx, sepsetyx, signif);
+        checkCI(pat, card, y, x, pvalyx, sepsetyx, signif);
        
         if (pvalxy.doubleValue() > 0 || pvalyx.doubleValue() > 0)
         {
@@ -71,14 +70,13 @@ public abstract class IndependenceTest {
      * conditional independence tests
      * @param pat current state of the structure
      * @param card maximum size of conditioning set
-	 * @param nc list with variables to be left out of conditioning sets
 	 * @param x variable x
 	 * @param y variable y
      * @param maxpval output variable for maximum p-value acquired from test
 	 * @param sepset empty list to be filled with sepset of x and y
 	 * @param signif significance level to be used for the test
      */
-    protected void checkCI(Pattern pat, int card,  ArrayList<Integer> nc, int x, int y, MutableDouble maxpval, HashSet<Integer> sepset, double signif)
+    protected void checkCI(Pattern pat, int card, int x, int y, MutableDouble maxpval, HashSet<Integer> sepset, double signif)
     {
         int nvar = ds.getNumberOfVariables();//number of variables in dataset
 
@@ -88,35 +86,20 @@ public abstract class IndependenceTest {
         // populate elements vector
         ArrayList<Integer> elements=new ArrayList<Integer>();
         int i;
-        for (i = 0; i < nvar; i++)
-        {
-            if (i != x && i != y && pat.getEdge(x, i) == Pattern.EdgeType.Undirected)
-            {
-                boolean isnc = false;
-                for (int j = 0; j < (int) nc.size() && !isnc; j++)
-                {
-                    if (i == nc.get(j))
-                    {
-                        isnc = true;
-                    }
-                }
-                if (!isnc)
-                {
+        for (i = 0; i < nvar; i++) {
+            if (i != x && i != y && pat.getEdge(x, i) == Pattern.EdgeType.Undirected) {
                     elements.add(i);
-                }
             }
         }
 
         // check for enough elements
-        if ((int) elements.size() < card)
-        {
+        if ((int) elements.size() < card) {
             return;
         }
 
         // generate conditioning sets
         ArrayList<Boolean> binvec = new ArrayList<Boolean>(Collections.nCopies(elements.size(), false));
-        for (i = 0; i < card; i++)
-        {
+        for (i = 0; i < card; i++) {
             binvec.set(i,true);
         }
 
