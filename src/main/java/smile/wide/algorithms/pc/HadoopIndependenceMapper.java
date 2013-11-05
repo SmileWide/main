@@ -17,11 +17,14 @@
 package smile.wide.algorithms.pc;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.BitSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
+
+import smile.wide.utils.Pair;
 
 /**
  * Mapper
@@ -44,39 +47,41 @@ public class HadoopIndependenceMapper extends Mapper<LongWritable, Text, Text, I
 	@Override
 	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 		record = value.toString();
-		String[] values = record.split(",|\\t| ");
+		String[] values = record.split(",|\t| ");
 		//HERE PARSE RECORD AND GENERATE ALL POSSIBLE COMBOS (WANT TO SEE HOW BAD IT GETS)
-		BitSet b = new BitSet(values.length+1);
-		b.clear();
-		int setsize = 0;
-		String assignment = new String("");
-		while(!b.get(values.length)) {
-			assignment = "";
-			if(setsize <= maxAdjacency+2) {
-				for(int x=0; x<values.length;++x) {
-					if(b.get(x)) {
-						if(assignment.length()>0) {
-							assignment+="+v"+x+"="+values[x];
-						}
-						else
-							assignment="v"+x+"="+values[x];
-					}
-				}
-				if(setsize > 0)
-					context.write(new Text(assignment), new IntWritable(1));							
-			}
-			//increment b
-	        for(int i = 0; i < b.size(); i++) {
-	            if(!b.get(i)) {
-	                b.set(i);
-	                setsize=setsize+1;
-	                break;
-	            } else {
-	                b.clear(i);
-	                setsize=setsize-1;
-	            }
-	        }					
-		}
+		ArrayList<Pair<Integer,String>> set= new ArrayList<Pair<Integer,String>>();
+		powerset(context,set,values,0,maxAdjacency+2);
 		//cleanup
+	}
+	
+	/**Powerset generator
+	 * 
+	 * @param context used for outputting MapReduce Key-Value pair
+	 * @param set current subset of powerset
+	 * @param vals complete array
+	 * @param vctr counter in array
+	 * @param max max size of subset
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	void powerset(Context context, ArrayList<Pair<Integer,String>> set, String[] vals, int vctr, int max) throws IOException, InterruptedException {
+		String assignment = "";
+		if(set.size()>0) {
+			for(int x=0; x<set.size();++x) {
+				if(assignment.length()>0) {
+					assignment+="+v"+set.get(x).getFirst()+"="+set.get(x).getSecond();
+				}
+				else
+					assignment="v"+set.get(x).getFirst()+"="+set.get(x).getSecond();
+			}
+			context.write(new Text(assignment), new IntWritable(1));
+		}
+		if(set.size()+1<=max) {
+			for(int x=vctr;x<vals.length;++x) {
+				set.add(new Pair<Integer,String>(x,vals[x]));
+				powerset(context,set,vals,x+1,max);
+				set.remove(set.size()-1);
+			}
+		}
 	}
 }
