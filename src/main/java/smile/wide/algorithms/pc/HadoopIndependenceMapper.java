@@ -17,6 +17,7 @@
 package smile.wide.algorithms.pc;
 
 import java.io.IOException;
+import java.util.BitSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.*;
@@ -28,21 +29,54 @@ import org.apache.hadoop.mapreduce.*;
  *
  */
 public class HadoopIndependenceMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
-	Text record = new Text("");
+	String record = new String();
+	int maxAdjacency = 0;
 	/** Initializes class parameters*/
 	@Override
 	protected void setup(Context context) {
 		Configuration conf = context.getConfiguration();
 		//set some constants here
+		maxAdjacency = conf.getInt("maxAdjacency", 0);
 	}
 	
 	/**Mapper
 	 */
 	@Override
 	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-		record = value;
+		record = value.toString();
+		String[] values = record.split(",|\\t| ");
 		//HERE PARSE RECORD AND GENERATE ALL POSSIBLE COMBOS (WANT TO SEE HOW BAD IT GETS)
-		context.write(new Text("key"), new IntWritable(1));
+		BitSet b = new BitSet(values.length+1);
+		b.clear();
+		int setsize = 0;
+		String assignment = new String("");
+		while(!b.get(values.length)) {
+			assignment = "";
+			if(setsize <= maxAdjacency+2) {
+				for(int x=0; x<values.length;++x) {
+					if(b.get(x)) {
+						if(assignment.length()>0) {
+							assignment+="+v"+x+"="+values[x];
+						}
+						else
+							assignment="v"+x+"="+values[x];
+					}
+				}
+				if(setsize > 0)
+					context.write(new Text(assignment), new IntWritable(1));							
+			}
+			//increment b
+	        for(int i = 0; i < b.size(); i++) {
+	            if(!b.get(i)) {
+	                b.set(i);
+	                setsize=setsize+1;
+	                break;
+	            } else {
+	                b.clear(i);
+	                setsize=setsize-1;
+	            }
+	        }					
+		}
 		//cleanup
 	}
 }
