@@ -178,7 +178,6 @@ public class PC {
         try {
 			istep.execute(ds, pat, disc, maxAdjacency, significance, sepsets);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

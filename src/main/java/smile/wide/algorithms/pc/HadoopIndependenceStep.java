@@ -32,8 +32,10 @@ public class HadoopIndependenceStep extends IndependenceStep {
 		conf.setInt("maxAdjacency", maxAdjacency);
 		conf.setFloat("significance", (float) significance);
 		conf.set("datainput","/user/mdejongh/input");
-		conf.set("dataoutput","/user/mdejongh/output");
+		conf.set("countoutput","/user/mdejongh/counts");
+		conf.set("processedcounts","/user/mdejongh/output");
 		String[] args = {};
+				
 		ToolRunner.run(conf, new HadoopIndependenceJob(), args);
 		//retrieve results here
 		//independence tests
