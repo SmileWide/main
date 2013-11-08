@@ -45,7 +45,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 
 		//GAME PLAN:
 		//1. we need code for count calculation (is there but needs tweaking)
-		calculateCounts(conf);
+		//calculateCounts(conf);//we can skip since we've already calculated this
 		//2. we need code for count processing into intermediate(to be created)
 		processCounts(conf);
 		//3. we need code to take intermediate so we have all datapoints for the G2 calculation
@@ -85,7 +85,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 		job.setMapOutputValueClass(Text.class);
 		job.setReducerClass(HadoopIndCountProcReducer.class);
 		job.setInputFormatClass(TextInputFormat.class);
-		job.setNumReduceTasks(240);
+		job.setNumReduceTasks(1);
 
 		//Set input and output paths
 		Path inputPath = new Path(conf.get("countoutput"));

@@ -48,7 +48,7 @@ public class HadoopIndCountProcMapper extends Mapper<LongWritable, Text, Text, T
 	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 		record = value.toString();
 		String[]  pair= record.split("\t| ");
-		String[] assignments = pair[0].split("+");
+		String[] assignments = pair[0].split("\\+");
 		ArrayList<String> variables = new ArrayList<String>();
 		ArrayList<String> values = new ArrayList<String>();
 		for(int x=0;x<assignments.length;++x) {
