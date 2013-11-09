@@ -39,13 +39,17 @@ public class HadoopIndCountProcReducer extends Reducer<Text, Text, Text, Text> {
 		ArrayList<Integer> counts = new ArrayList<Integer>();
 		for (Text p: values) {
 			temp = p.toString();
+			context.write(key, p);//just to check what it looks like
+			/*
 			String[] pair = temp.split("=");
 			counts.add(Integer.getInteger(pair[1]));
 			String[] myvalues = pair[0].split(",");
 			for(int x=0;x<myvalues.length;++x) {
 				varvalues.get(x).add(myvalues[x]);
 			}
+			*/
 		}
+	
 		/*At this point we have for all variables their values (and thus their cardinality)
 		* and we have all counts in an array
 		* We have Xijk, we need X_jk , Xi_k, X__k
@@ -57,6 +61,8 @@ public class HadoopIndCountProcReducer extends Reducer<Text, Text, Text, Text> {
 		* should be O(n^2), pick x, pick y, rest is Z
 		* 
 		*/
+		
+		/*
 		for(int x=0;x<variables.length;++x) {
 			for(int y=0;y<variables.length;++y) {
 				if(y!=x) {
@@ -74,10 +80,12 @@ public class HadoopIndCountProcReducer extends Reducer<Text, Text, Text, Text> {
 		 * we have a sorted list of variables
 		 */
 		
+		/*
 		temp = "";
 		for (int x = 0; x<variables.length;++x) {
 			temp += varvalues.get(x).size() + ",";
 		}
-		context.write(key, new Text(temp));
+		//context.write(key, new Text(temp));
+		*/
 	}
 }

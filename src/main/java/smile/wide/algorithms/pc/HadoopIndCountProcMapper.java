@@ -52,21 +52,30 @@ public class HadoopIndCountProcMapper extends Mapper<LongWritable, Text, Text, T
 			variables.add(assignment[0]);
 			values.add(assignment[1]);
 		}
-		mykey = "";
+		/*from the created counts we generate all possible combinations of
+		* (x,y,Z), ((x,y,Z),count)
+		*/
 		for(int x=0;x<variables.size();++x) {
-			if(x!=0)
-				mykey += "," + variables.get(x);
-			else
-				mykey += variables.get(x);
+			for(int y=0;y<variables.size();++y) {
+				if(x!=y) {
+					mykey = variables.get(x) + "," + variables.get(y);
+					myvalue = values.get(x) + "," + values.get(y);
+					if(variables.size()>2) {
+						/*add a check here to see if all variables
+						 * in Z are connected to x
+						 * if not, discard this instance.
+						 */
+						for(int z=0;z<variables.size();++z) {
+							if(z!=x && z!=y) {
+								mykey += "," + variables.get(z);
+								myvalue += "," + values.get(z);
+							}
+						}
+					}
+					myvalue+= "=" + pair[1];
+					context.write(new Text(mykey), new Text(myvalue));
+				}
+			}
 		}
-		myvalue = "";
-		for(int x=0;x<values.size();++x) {
-			if(x!=0)
-				myvalue += "," + values.get(x);
-			else
-				myvalue += values.get(x);
-		}
-		myvalue += "="+pair[1];
-		context.write(new Text(mykey), new Text(myvalue));
 	}
 }
