@@ -14,7 +14,7 @@
    See the License for the specific language governing
      permissions and limitations under the License.
 */
-package smile.wide.algorithms.pc;
+package smile.wide.algorithms.fang;
 
 import java.io.IOException;
 import java.util.ArrayList;

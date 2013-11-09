@@ -14,10 +14,11 @@
    See the License for the specific language governing
      permissions and limitations under the License.
 */
-package smile.wide.algorithms.pc;
+package smile.wide.algorithms.chen;
 
 import java.io.IOException;
 import java.util.ArrayList;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
