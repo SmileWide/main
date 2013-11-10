@@ -179,7 +179,6 @@ public class DiscIndependenceTest extends IndependenceTest {
             int x_jk = ad.getCount(tmp);
     		if(x_jk == 0)
     		{
-    				tmp.clone();
     				ArrayList<Pair<Integer,Integer>> templst = new ArrayList<Pair<Integer,Integer>>();
     				for(Pair<Integer,Integer> p: tmp)
     					templst.add(new Pair<Integer,Integer>(p.getFirst(),p.getSecond()));
