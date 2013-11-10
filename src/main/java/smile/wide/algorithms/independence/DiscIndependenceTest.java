@@ -206,7 +206,7 @@ public class DiscIndependenceTest extends IndependenceTest {
                 g2 += xijk * (Math.log((double) xijk) - logexijk);
             }
     	}
-    	//New calculation of degrees of freedom (HAVING DATASTRUCTURE PROBLEMS: HASHING + EQUALITY)
+    	//New calculation of degrees of freedom
     	// process empty rows/columns
     	Iterator<ArrayList<Pair<Integer,Integer>>> itt;
     	HashMap<ArrayList<Pair<Integer,Integer> >, Pair<Integer,Integer> > brokentables = 

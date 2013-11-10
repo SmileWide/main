@@ -40,16 +40,19 @@ public class HadoopIndCountProcReducer extends Reducer<Text, Text, Text, Text> {
 		mykey = key.toString();
 		String[] variables = mykey.split(",");
 		
+		Map<List<String>,Integer> elements = new HashMap<List<String>,Integer>();
 		Map<List<String>,Integer> adder = new HashMap<List<String>,Integer>();
 		for (Text p: values) {
 			temp = p.toString();
 			String[] pair = temp.split("=");
 			Integer count = Integer.decode(pair[1]);
 			String[] myvalues = pair[0].split(",");
+			List<String> xijk = new ArrayList<String>();
 			List<String> x_jk = new ArrayList<String>();
 			List<String> xi_k = new ArrayList<String>();
 			List<String> x__k = new ArrayList<String>();
 			for(int v=0;v<myvalues.length;++v) {
+				xijk.add(myvalues[v]);
 				if(v==0)
 					x_jk.add(null);
 				else
@@ -63,6 +66,7 @@ public class HadoopIndCountProcReducer extends Reducer<Text, Text, Text, Text> {
 				else
 					x__k.add(myvalues[v]);
 			}
+			elements.put(xijk, count);
 			if(adder.get(x_jk)!=null)
 				adder.put(x_jk, adder.get(x_jk)+count);
 			else
@@ -76,8 +80,24 @@ public class HadoopIndCountProcReducer extends Reducer<Text, Text, Text, Text> {
 			else
 				adder.put(x__k, count);
 		}
-		for (Entry<List<String>,Integer> q : adder.entrySet()) {
+		double g2 = 0.0;
+		for(Entry<List<String>,Integer> q : elements.entrySet()) {
+			double xijk = q.getValue();
+			ArrayList<String> marginal = new ArrayList<String>();
+			for(String z : q.getKey())
+				marginal.add(new String(z));
+			marginal.set(0, null);
+			double x_jk = adder.get(marginal);
+			marginal.set(0,q.getKey().get(0));
+			marginal.set(1,null);
+			double xi_k = adder.get(marginal);
+			marginal.set(0, null);
+			double x__k = adder.get(marginal);
+			double logexijk = Math.log(x_jk)+Math.log(xi_k)-Math.log(x__k);
+			g2 += xijk*(Math.log(xijk)-logexijk);
 		}
+		
+		context.write(key, new Text(Double.toString(g2)));
 		/*
 		ArrayList<HashSet<String>> varvalues = new ArrayList<HashSet<String>>();
 		for(int x=0;x<variables.length;++x)
