@@ -27,8 +27,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang.mutable.MutableInt;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.Mapper.Context;
 
 import smile.wide.utils.Pair;
 import smile.wide.utils.SMILEMath;
@@ -39,6 +41,15 @@ import smile.wide.utils.SMILEMath;
 public class HadoopIndCountProcReducer extends Reducer<Text, Text, Text, Text> {
 	String mykey = new String();
 	String temp = new String();
+	double significance = 0.05;
+	/** Initializes class parameters*/
+	@Override
+	protected void setup(Context context) {
+		Configuration conf = context.getConfiguration();
+		//set some constants here
+		significance = conf.getFloat("significance", (float) 0.05);
+	}
+
 	@Override
 	/** Reduce function, for now should generate counts*/
 	public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
@@ -160,7 +171,10 @@ public class HadoopIndCountProcReducer extends Reducer<Text, Text, Text, Text> {
 		}
 		g2*=2;
     	double pvalue = (double) SMILEMath.gammq((double) (0.5 * dof), (double) (0.5 * g2));
-    	String outcome = "dof " + dof + ", g2 " + g2 + ", pvalue " + pvalue;
+    	//String outcome = "dof " + dof + ", g2 " + g2 + ", pvalue " + pvalue;
+    	String outcome = Double.toString(pvalue);
+//    	if(pvalue > significance)
+//    		outcome += " INDEPENDENT";
     	context.write(key, new Text(outcome));
 		/*
 		ArrayList<HashSet<String>> varvalues = new ArrayList<HashSet<String>>();
