@@ -57,7 +57,7 @@ public class HadoopIndCountProcMapper extends Mapper<LongWritable, Text, Text, T
 		*/
 		for(int x=0;x<variables.size();++x) {
 			for(int y=0;y<variables.size();++y) {
-				if(x!=y) {
+				if(x!=y) {//check if x and y are connected?
 					mykey = variables.get(x) + "," + variables.get(y);
 					myvalue = values.get(x) + "," + values.get(y);
 					if(variables.size()>2) {

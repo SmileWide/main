@@ -18,7 +18,13 @@ package smile.wide.algorithms.pc;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
 
@@ -33,23 +39,59 @@ public class HadoopIndCountProcReducer extends Reducer<Text, Text, Text, Text> {
 	public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
 		mykey = key.toString();
 		String[] variables = mykey.split(",");
+		
+		Map<List<String>,Integer> adder = new HashMap<List<String>,Integer>();
+		for (Text p: values) {
+			temp = p.toString();
+			String[] pair = temp.split("=");
+			Integer count = Integer.decode(pair[1]);
+			String[] myvalues = pair[0].split(",");
+			List<String> x_jk = new ArrayList<String>();
+			List<String> xi_k = new ArrayList<String>();
+			List<String> x__k = new ArrayList<String>();
+			for(int v=0;v<myvalues.length;++v) {
+				if(v==0)
+					x_jk.add(null);
+				else
+					x_jk.add(myvalues[v]);
+				if(v==1)
+					xi_k.add(null);
+				else
+					xi_k.add(myvalues[v]);
+				if(v<2)
+					x__k.add(null);
+				else
+					x__k.add(myvalues[v]);
+			}
+			if(adder.get(x_jk)!=null)
+				adder.put(x_jk, adder.get(x_jk)+count);
+			else
+				adder.put(x_jk, count);
+			if(adder.get(xi_k)!=null)
+				adder.put(xi_k, adder.get(xi_k)+count);
+			else
+				adder.put(xi_k, count);
+			if(adder.get(x__k)!=null)
+				adder.put(x__k, adder.get(x__k)+count);
+			else
+				adder.put(x__k, count);
+		}
+		for (Entry<List<String>,Integer> q : adder.entrySet()) {
+		}
+		/*
 		ArrayList<HashSet<String>> varvalues = new ArrayList<HashSet<String>>();
 		for(int x=0;x<variables.length;++x)
 			varvalues.add(new HashSet<String>());
 		ArrayList<Integer> counts = new ArrayList<Integer>();
 		for (Text p: values) {
 			temp = p.toString();
-			context.write(key, p);//just to check what it looks like
-			/*
 			String[] pair = temp.split("=");
 			counts.add(Integer.getInteger(pair[1]));
 			String[] myvalues = pair[0].split(",");
 			for(int x=0;x<myvalues.length;++x) {
 				varvalues.get(x).add(myvalues[x]);
 			}
-			*/
 		}
-	
 		/*At this point we have for all variables their values (and thus their cardinality)
 		* and we have all counts in an array
 		* We have Xijk, we need X_jk , Xi_k, X__k
@@ -61,7 +103,6 @@ public class HadoopIndCountProcReducer extends Reducer<Text, Text, Text, Text> {
 		* should be O(n^2), pick x, pick y, rest is Z
 		* 
 		*/
-		
 		/*
 		for(int x=0;x<variables.length;++x) {
 			for(int y=0;y<variables.length;++y) {
@@ -79,13 +120,12 @@ public class HadoopIndCountProcReducer extends Reducer<Text, Text, Text, Text> {
 		/*Somehow build a tree structure with the counts like an ADTREE??
 		 * we have a sorted list of variables
 		 */
-		
 		/*
 		temp = "";
 		for (int x = 0; x<variables.length;++x) {
 			temp += varvalues.get(x).size() + ",";
 		}
-		//context.write(key, new Text(temp));
+		context.write(key, new Text(temp));
 		*/
 	}
 }

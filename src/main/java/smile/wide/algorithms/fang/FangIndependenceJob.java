@@ -14,7 +14,7 @@
    See the License for the specific language governing
      permissions and limitations under the License.
 */
-package smile.wide.algorithms.chen;
+package smile.wide.algorithms.fang;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -36,7 +36,7 @@ import org.apache.hadoop.util.ToolRunner;
  *  Retrieves output data file
  * @author m.a.dejongh@gmail.com
  */
-public class HadoopIndependenceJob extends Configured implements Tool {
+public class FangIndependenceJob extends Configured implements Tool {
 	/** Sets up the hadoop job and sends it to the cluster
 	 * waits for the job to be completed.*/
 	@Override
@@ -56,7 +56,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 		//init job
 		Job job = new Job(conf);
 		job.setJobName("Distributed Independence Test - Calculate Counts");
-		job.setJarByClass(HadoopIndependenceJob.class);
+		job.setJarByClass(FangIndependenceJob.class);
 		job.setMapperClass(HadoopIndCounterMapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(IntWritable.class);
@@ -79,7 +79,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 		//init job
 		Job job = new Job(conf);
 		job.setJobName("Distributed Independence Test - Process Counts");
-		job.setJarByClass(HadoopIndependenceJob.class);
+		job.setJarByClass(FangIndependenceJob.class);
 		job.setMapperClass(HadoopIndCountProcMapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(Text.class);
@@ -101,7 +101,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 	/** main function, executes the job on the cluster*/
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		int exitCode = ToolRunner.run(conf, new HadoopIndependenceJob(), args);
+		int exitCode = ToolRunner.run(conf, new FangIndependenceJob(), args);
 		System.exit(exitCode);
 	}
 }

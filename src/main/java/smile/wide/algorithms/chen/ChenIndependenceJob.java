@@ -14,7 +14,7 @@
    See the License for the specific language governing
      permissions and limitations under the License.
 */
-package smile.wide.algorithms.fang;
+package smile.wide.algorithms.chen;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -36,7 +36,7 @@ import org.apache.hadoop.util.ToolRunner;
  *  Retrieves output data file
  * @author m.a.dejongh@gmail.com
  */
-public class HadoopIndependenceJob extends Configured implements Tool {
+public class ChenIndependenceJob extends Configured implements Tool {
 	/** Sets up the hadoop job and sends it to the cluster
 	 * waits for the job to be completed.*/
 	@Override
@@ -45,7 +45,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 
 		//GAME PLAN:
 		//1. we need code for count calculation (is there but needs tweaking)
-		//calculateCounts(conf);//we can skip since we've already calculated this
+		calculateCounts(conf);
 		//2. we need code for count processing into intermediate(to be created)
 		processCounts(conf);
 		//3. we need code to take intermediate so we have all datapoints for the G2 calculation
@@ -56,7 +56,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 		//init job
 		Job job = new Job(conf);
 		job.setJobName("Distributed Independence Test - Calculate Counts");
-		job.setJarByClass(HadoopIndependenceJob.class);
+		job.setJarByClass(ChenIndependenceJob.class);
 		job.setMapperClass(HadoopIndCounterMapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(IntWritable.class);
@@ -79,7 +79,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 		//init job
 		Job job = new Job(conf);
 		job.setJobName("Distributed Independence Test - Process Counts");
-		job.setJarByClass(HadoopIndependenceJob.class);
+		job.setJarByClass(ChenIndependenceJob.class);
 		job.setMapperClass(HadoopIndCountProcMapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(Text.class);
@@ -101,7 +101,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 	/** main function, executes the job on the cluster*/
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		int exitCode = ToolRunner.run(conf, new HadoopIndependenceJob(), args);
+		int exitCode = ToolRunner.run(conf, new ChenIndependenceJob(), args);
 		System.exit(exitCode);
 	}
 }

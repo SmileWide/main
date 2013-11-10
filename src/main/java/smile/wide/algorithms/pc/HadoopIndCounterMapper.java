@@ -48,7 +48,7 @@ public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, Int
 		String[] values = record.split(",|\t| ");
 		//HERE PARSE RECORD AND GENERATE ALL POSSIBLE COMBOS (WANT TO SEE HOW BAD IT GETS)
 		ArrayList<Pair<Integer,String>> set= new ArrayList<Pair<Integer,String>>();
-		powerset(context,set,values,0,maxAdjacency+2);
+		powerset(context,set,values,0,maxAdjacency+2);//not the most efficient way to do it, but works for now
 		//cleanup
 	}
 	
@@ -64,7 +64,7 @@ public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, Int
 	 */
 	void powerset(Context context, ArrayList<Pair<Integer,String>> set, String[] vals, int vctr, int max) throws IOException, InterruptedException {
 		String assignment = "";
-		if(set.size()>0) {
+		if(set.size()==max) {//now only generates sets of size max (which is all PC needs)
 			for(int x=0; x<set.size();++x) {
 				if(assignment.length()>0) {
 					assignment+="+v"+set.get(x).getFirst()+"="+set.get(x).getSecond();
