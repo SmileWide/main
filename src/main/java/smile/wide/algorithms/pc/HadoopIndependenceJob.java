@@ -18,6 +18,7 @@ package smile.wide.algorithms.pc;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
@@ -45,11 +46,11 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 		Configuration conf = super.getConf();
 
 		//GAME PLAN:
-		//1. we need code for count calculation (is there but needs tweaking)
+		//1. count calculation
 		calculateCounts(conf);//we can skip since we've already calculated this
-		//2. we need code for count processing into p-values (needs more testing)
+		//2. process counts into p-values (i.e. run tests of independence)
 		processCounts(conf);
-		//3. we need code for getting max p-value for a test
+		//3. extract edges with sepsets that had highest p-value
 		extractMaxPValue(conf);
 		return 0;
 	}
@@ -120,7 +121,13 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 
 		//Run the job
-		job.waitForCompletion(true);	
+		job.waitForCompletion(true);
+		
+		//download result file
+		FileSystem dfs = FileSystem.get(conf);
+		outputPath.suffix("/part-r-00000");
+		String outputfile = conf.get("edgelist");
+		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
 	}
 
 	/** main function, executes the job on the cluster*/
