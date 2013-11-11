@@ -62,7 +62,7 @@ public class HadoopIndependenceStep extends IndependenceStep {
 					int y = Integer.decode(variables[1]);
 					pat.setEdge(x, y, EdgeType.None);
 					pat.setEdge(y, x, EdgeType.None);
-					if(maxAdjacency > 0) {
+					if(adjacency > 0) {
 						String[] sepset = contents[1].replace("v","").replace("{","").replace("}", "").split(",");
 						for(int z=0;z<sepset.length;++z) {
 							int s = Integer.decode(sepset[z]);

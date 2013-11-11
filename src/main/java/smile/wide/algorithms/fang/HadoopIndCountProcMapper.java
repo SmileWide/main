@@ -31,12 +31,6 @@ public class HadoopIndCountProcMapper extends Mapper<LongWritable, Text, Text, T
 	String record = new String();
 	String mykey = new String();
 	String myvalue = new String();
-	/** Initializes class parameters*/
-	@Override
-	protected void setup(Context context) {
-		Configuration conf = context.getConfiguration();
-		//set some constants here
-	}
 	
 	/**Mapper
 	 */

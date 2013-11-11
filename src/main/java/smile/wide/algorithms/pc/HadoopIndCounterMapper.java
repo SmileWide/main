@@ -18,6 +18,9 @@ package smile.wide.algorithms.pc;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
@@ -68,10 +71,14 @@ public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, Int
 	void powerset(Context context, ArrayList<Pair<Integer,String>> set, String[] vals, int vctr, int max) throws IOException, InterruptedException {
 		String assignment = "";
 		if(set.size()==max) {//now only generates sets of size max (which is all PC needs)
-			boolean all_connected = true;
 			//have to search to see if nodes from one connected component
-			
-			if(all_connected) {
+			Set<Integer> nodes = new HashSet<Integer>();
+			Set<Integer> marked = new HashSet<Integer>();
+			for(Pair<Integer,String> p : set) {
+				nodes.add(p.getFirst());
+			}
+			depthFirstSearch(pat,nodes,marked,nodes.iterator().next());
+			if(nodes.size() == marked.size()) {
 				for(int x=0; x<set.size();++x) {
 					if(assignment.length()>0) {
 						assignment+="+v"+set.get(x).getFirst()+"="+set.get(x).getSecond();
@@ -87,6 +94,17 @@ public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, Int
 				set.add(new Pair<Integer,String>(x,vals[x]));
 				powerset(context,set,vals,x+1,max);
 				set.remove(set.size()-1);
+			}
+		}
+	}
+	
+	void depthFirstSearch(Pattern pat, Set<Integer> set, Set<Integer> marked, int current) {
+		if( !marked.contains(current) ){
+			marked.add(current);
+			for(Integer i : set) {
+				if(pat.getEdge(current, i) != Pattern.EdgeType.None) {
+					depthFirstSearch(pat,set,marked,i);
+				}
 			}
 		}
 	}

@@ -13,7 +13,7 @@ public class PCTest {
 		ds.Read("input/paddestoel_test.txt");
 		Pattern pat = new Pattern();
 		PC alg = new PC();
-		//alg.istep = new HadoopIndependenceStep();
+		alg.istep = new HadoopIndependenceStep();
 		alg.maxAdjacency = 8;
 		alg.significance = 0.05;
 		//Test the PC class with same dataset. print out result

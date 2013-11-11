@@ -20,7 +20,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -58,11 +57,12 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 	void calculateCounts(Configuration conf) throws Exception {
 		//init job
 		Job job = new Job(conf);
-		job.setJobName("Distributed Independence Test - Calculate Counts");
+		job.setJobName("Distributed Independence Test - Calculate Counts - Iteration " + conf.get("maxAdjacency"));
 		job.setJarByClass(HadoopIndependenceJob.class);
 		job.setMapperClass(HadoopIndCounterMapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(IntWritable.class);
+		job.setCombinerClass(HadoopIndCounterReducer.class);
 		job.setReducerClass(HadoopIndCounterReducer.class);
 		job.setInputFormatClass(TextInputFormat.class);
 		job.setNumReduceTasks(240);
@@ -81,7 +81,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 	void processCounts(Configuration conf) throws Exception {
 		//init job
 		Job job = new Job(conf);
-		job.setJobName("Distributed Independence Test - Process Counts");
+		job.setJobName("Distributed Independence Test - Process Counts - Iteration " + conf.get("maxAdjacency"));
 		job.setJarByClass(HadoopIndependenceJob.class);
 		job.setMapperClass(HadoopIndCountProcMapper.class);
 		job.setMapOutputKeyClass(Text.class);
@@ -104,7 +104,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 	void extractMaxPValue(Configuration conf) throws Exception{
 		//init job
 		Job job = new Job(conf);
-		job.setJobName("Distributed Independence Test - Find Max P-Value");
+		job.setJobName("Distributed Independence Test - Find Max P-Value - Iteration " + conf.get("maxAdjacency"));
 		job.setJarByClass(HadoopIndependenceJob.class);
 		job.setMapperClass(HadoopIndMaxPValueMapper.class);
 		job.setMapOutputKeyClass(Text.class);
