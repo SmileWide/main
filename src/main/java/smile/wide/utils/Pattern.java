@@ -15,6 +15,28 @@ public class Pattern {
 	/**2d array that contains the adjacency matrix*/
 	ArrayList<ArrayList<EdgeType> > mat = new ArrayList<ArrayList<EdgeType> >();
 	
+	/**Empty default constructor*/
+	public Pattern() {	
+	}
+	
+	/**constructor, creates pattern from string*/
+	public Pattern(String value) {
+		String[] data = value.split("#");
+		int size = Integer.decode(data[0]);
+		setSize(size);
+		char z;
+		for(int y=0;y<size;++y) {
+			for(int x=0;x<size;++x) {
+				z = data[1].charAt(x+y*size);
+	            switch(z) {
+	            case '0': setEdge(y,x,EdgeType.None);break;
+	            case '1': setEdge(y,x,EdgeType.Undirected);break;
+	            case '2': setEdge(y,x,EdgeType.Directed);break;
+	            }
+			}
+		}
+	}
+	
 	/**returns number of variables
 	 * @return number of variables
 	 * */
@@ -146,5 +168,25 @@ public class Pattern {
 	        }
 	        System.out.println();
 	    }
+	}
+	
+	@Override 
+	public String toString() {
+		int size = getSize();
+		String value = new String();
+		value = size + "#";
+	    for (int i = 0; i < size; i++) {
+	        for (int j = 0; j < size; j++) {
+	            if (j != 0) {
+	            	System.out.print(" ");
+	            }
+	            switch(getEdge(i,j)) {
+	            case None:value+="0";break;
+	            case Undirected:value+="1";break;
+	            case Directed:value+="2";break;
+	            }
+	        }
+	    }
+		return value;
 	}
 }

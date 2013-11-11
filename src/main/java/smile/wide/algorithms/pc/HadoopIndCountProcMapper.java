@@ -22,6 +22,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
 
+import smile.wide.utils.Pattern;
+
 /**
  * Mapper
  * @author m.a.dejongh@gmail.com
@@ -31,11 +33,13 @@ public class HadoopIndCountProcMapper extends Mapper<LongWritable, Text, Text, T
 	String record = new String();
 	String mykey = new String();
 	String myvalue = new String();
+	Pattern pat = new Pattern();
 	/** Initializes class parameters*/
 	@Override
 	protected void setup(Context context) {
 		Configuration conf = context.getConfiguration();
 		//set some constants here
+		pat = new Pattern(conf.get("pattern"));
 	}
 	
 	/**Mapper
@@ -57,23 +61,26 @@ public class HadoopIndCountProcMapper extends Mapper<LongWritable, Text, Text, T
 		*/
 		for(int x=0;x<variables.size();++x) {
 			for(int y=0;y<variables.size();++y) {
-				if(x!=y) {//check if x and y are connected?
+				if(x!=y && pat.getEdge(x, y) != Pattern.EdgeType.None) {//check if x and y are connected?
 					mykey = variables.get(x) + "," + variables.get(y);
 					myvalue = values.get(x) + "," + values.get(y);
+					boolean all_connected = true;
 					if(variables.size()>2) {
-						/*add a check here to see if all variables
-						 * in Z are connected to x
-						 * if not, discard this instance.
-						 */
+						//check if all variables in Z are connected to x
 						for(int z=0;z<variables.size();++z) {
 							if(z!=x && z!=y) {
+								if(pat.getEdge(x, z) == Pattern.EdgeType.None) {
+									all_connected = false;
+									break;
+								}
 								mykey += "," + variables.get(z);
 								myvalue += "," + values.get(z);
 							}
 						}
 					}
 					myvalue+= "=" + pair[1];
-					context.write(new Text(mykey), new Text(myvalue));
+					if(all_connected)
+						context.write(new Text(mykey), new Text(myvalue));
 				}
 			}
 		}

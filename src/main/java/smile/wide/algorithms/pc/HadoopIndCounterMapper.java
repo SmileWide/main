@@ -23,6 +23,7 @@ import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
 
 import smile.wide.utils.Pair;
+import smile.wide.utils.Pattern;
 
 /**
  * Mapper
@@ -31,6 +32,7 @@ import smile.wide.utils.Pair;
  */
 public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
 	String record = new String();
+	Pattern pat = new Pattern();
 	int maxAdjacency = 0;
 	/** Initializes class parameters*/
 	@Override
@@ -38,6 +40,7 @@ public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, Int
 		Configuration conf = context.getConfiguration();
 		//set some constants here
 		maxAdjacency = conf.getInt("maxAdjacency", 0);
+		pat = new Pattern(conf.get("pattern"));
 	}
 	
 	/**Mapper
@@ -65,14 +68,19 @@ public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, Int
 	void powerset(Context context, ArrayList<Pair<Integer,String>> set, String[] vals, int vctr, int max) throws IOException, InterruptedException {
 		String assignment = "";
 		if(set.size()==max) {//now only generates sets of size max (which is all PC needs)
-			for(int x=0; x<set.size();++x) {
-				if(assignment.length()>0) {
-					assignment+="+v"+set.get(x).getFirst()+"="+set.get(x).getSecond();
+			boolean all_connected = true;
+			//have to search to see if nodes from one connected component
+			
+			if(all_connected) {
+				for(int x=0; x<set.size();++x) {
+					if(assignment.length()>0) {
+						assignment+="+v"+set.get(x).getFirst()+"="+set.get(x).getSecond();
+					}
+					else
+						assignment="v"+set.get(x).getFirst()+"="+set.get(x).getSecond();
 				}
-				else
-					assignment="v"+set.get(x).getFirst()+"="+set.get(x).getSecond();
+				context.write(new Text(assignment), new IntWritable(1));
 			}
-			context.write(new Text(assignment), new IntWritable(1));
 		}
 		if(set.size()+1<=max) {
 			for(int x=vctr;x<vals.length;++x) {

@@ -45,8 +45,9 @@ public class HadoopIndependenceStep extends IndependenceStep {
 			conf.set("processedcounts","/user/mdejongh/pvalues");
 			conf.set("maxpvalues","/user/mdejongh/output");
 			conf.set("edgelist","edgelist.txt");
+			conf.set("pattern",pat.toString());
 			String[] args = {};
-					
+			
 			ToolRunner.run(conf, new HadoopIndependenceJob(), args);
 			//retrieve results here
 			try {
@@ -74,7 +75,7 @@ public class HadoopIndependenceStep extends IndependenceStep {
 				file.delete();
 			} catch (IOException e) {
 				e.printStackTrace();
-			}		
+			}
 		}
 	}
 
