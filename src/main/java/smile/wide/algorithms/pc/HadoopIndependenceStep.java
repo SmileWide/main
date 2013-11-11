@@ -33,7 +33,8 @@ public class HadoopIndependenceStep extends IndependenceStep {
 		conf.setFloat("significance", (float) significance);
 		conf.set("datainput","/user/mdejongh/input");
 		conf.set("countoutput","/user/mdejongh/counts");
-		conf.set("processedcounts","/user/mdejongh/output");
+		conf.set("processedcounts","/user/mdejongh/pvalues");
+		conf.set("maxpvalues","/user/mdejongh/output");
 		String[] args = {};
 				
 		ToolRunner.run(conf, new HadoopIndependenceJob(), args);

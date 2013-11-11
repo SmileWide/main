@@ -19,6 +19,7 @@ package smile.wide.algorithms.pc;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -45,10 +46,11 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 
 		//GAME PLAN:
 		//1. we need code for count calculation (is there but needs tweaking)
-		//calculateCounts(conf);//we can skip since we've already calculated this
-		//2. we need code for count processing into intermediate(to be created)
+		calculateCounts(conf);//we can skip since we've already calculated this
+		//2. we need code for count processing into p-values (needs more testing)
 		processCounts(conf);
-		//3. we need code to take intermediate so we have all datapoints for the G2 calculation
+		//3. we need code for getting max p-value for a test
+		extractMaxPValue(conf);
 		return 0;
 	}
 
@@ -85,7 +87,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 		job.setMapOutputValueClass(Text.class);
 		job.setReducerClass(HadoopIndCountProcReducer.class);
 		job.setInputFormatClass(TextInputFormat.class);
-		job.setNumReduceTasks(1);
+		job.setNumReduceTasks(240);
 
 		//Set input and output paths
 		Path inputPath = new Path(conf.get("countoutput"));
@@ -97,7 +99,30 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 		//Run the job
 		job.waitForCompletion(true);	
 	}
-		
+
+	void extractMaxPValue(Configuration conf) throws Exception{
+		//init job
+		Job job = new Job(conf);
+		job.setJobName("Distributed Independence Test - Find Max P-Value");
+		job.setJarByClass(HadoopIndependenceJob.class);
+		job.setMapperClass(HadoopIndMaxPValueMapper.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(Text.class);
+		job.setReducerClass(HadoopIndMaxPValueReducer.class);
+		job.setInputFormatClass(TextInputFormat.class);
+		job.setNumReduceTasks(1);
+
+		//Set input and output paths
+		Path inputPath = new Path(conf.get("processedcounts"));
+		FileInputFormat.setInputPaths(job, inputPath);
+		Path outputPath = new Path(conf.get("maxpvalues"));
+		FileOutputFormat.setOutputPath(job, outputPath);
+		outputPath.getFileSystem(conf).delete(outputPath, true);
+
+		//Run the job
+		job.waitForCompletion(true);	
+	}
+
 	/** main function, executes the job on the cluster*/
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
