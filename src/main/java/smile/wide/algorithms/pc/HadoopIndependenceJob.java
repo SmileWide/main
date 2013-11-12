@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.VIntWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
@@ -61,7 +62,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 		job.setJarByClass(HadoopIndependenceJob.class);
 		job.setMapperClass(HadoopIndCounterMapper.class);
 		job.setMapOutputKeyClass(Text.class);
-		job.setMapOutputValueClass(IntWritable.class);
+		job.setMapOutputValueClass(VIntWritable.class);
 		job.setCombinerClass(HadoopIndCounterReducer.class);
 		job.setReducerClass(HadoopIndCounterReducer.class);
 		job.setInputFormatClass(TextInputFormat.class);

@@ -35,10 +35,11 @@ import smile.wide.utils.Pattern;
  * @author m.a.dejongh@gmail.com
  *
  */
-public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
+public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, VIntWritable> {
 	String record = new String();
 	Pattern pat = new Pattern();
 	int maxAdjacency = 0;
+	VIntWritable one = new VIntWritable(1);
 	/** Initializes class parameters*/
 	@Override
 	protected void setup(Context context) {
@@ -54,10 +55,10 @@ public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, Int
 	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException  {
 		record = value.toString();
 		String[] values = record.split(",|\t| ");
-		//HERE PARSE RECORD AND GENERATE ALL POSSIBLE COMBOS (WANT TO SEE HOW BAD IT GETS)
-		ArrayList<Pair<Integer,String>> set= new ArrayList<Pair<Integer,String>>();
-		powerset(context,set,values,0,maxAdjacency+2);//not the most efficient way to do it, but works for now
-		//setGenerator(context, values, maxAdjacency);
+		//HERE PARSE RECORD AND GENERATE ALL POSSIBLE COMBOS
+		//ArrayList<Pair<Integer,String>> set= new ArrayList<Pair<Integer,String>>();
+		//powerset(context,set,values,0,maxAdjacency+2);//not the most efficient way to do it, but works for now
+		setGenerator(context, values, maxAdjacency);
 	}
 	
 	/**Powerset generator
@@ -88,7 +89,7 @@ public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, Int
 					else
 						assignment="v"+set.get(x).getFirst()+"="+set.get(x).getSecond();
 				}
-				context.write(new Text(assignment), new IntWritable(1));
+				context.write(new Text(assignment), one);
 			}
 		}
 		if(set.size()+1<=max) {
@@ -115,11 +116,11 @@ public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, Int
 		for(int x=0;x<vals.length;++x) {
 			for(int y=0;y<vals.length;++y) {
 				if(x!=y && pat.getEdge(x,y) != Pattern.EdgeType.None) {
-					String assignment = "v"+x+"="+vals[x]+",v"+y+"="+vals[y];
+					String assignment = "v"+x+"="+vals[x]+"+v"+y+"="+vals[y];
 					if(adjacency > 0)
 						sepsetFunction(context,x,y,adjacency,vals,assignment);
-					else
-						context.write(new Text(assignment), new IntWritable(1));
+					else if(x<y)
+						context.write(new Text(assignment), one);
 				}
 			}
 		}
@@ -154,8 +155,8 @@ public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, Int
             for (i = 0; i < (int) binvec.size(); i++) {
                 if (binvec.get(i)) {
                     int z = elements.get(i);
-        			sepset += ",v"+z+"="+vals[z];
-        			context.write(new Text(assignment+sepset), new IntWritable(1));
+        			sepset += "+v"+z+"="+vals[z];
+        			context.write(new Text(assignment+sepset), one);
                 }
             }
         }

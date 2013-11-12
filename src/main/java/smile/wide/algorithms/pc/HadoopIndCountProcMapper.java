@@ -58,6 +58,7 @@ public class HadoopIndCountProcMapper extends Mapper<LongWritable, Text, Text, T
 		}
 		//generateTestCombos(context,variables,values,pair);
 		//NEW VERSION OF CODE, NO NEED TO GENERATE ALL POSSIBLE COMBINATIONS
+
 		for(int x=0;x<variables.size();++x) {
 			if(x==0) {
 				mykey = variables.get(x);

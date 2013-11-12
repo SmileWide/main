@@ -292,8 +292,8 @@ public class PC {
 		ds.Read("../input/Hepar14k.txt");
 		Pattern pat = new Pattern();
 		PC alg = new PC();
-		alg.istep = new HadoopIndependenceStep();
-		alg.maxAdjacency = 0;
+		//alg.istep = new HadoopIndependenceStep();
+		alg.maxAdjacency = 8;
 		alg.significance = 0.05;
 		pat = alg.Learn(ds);
 		pat.Print();
