@@ -60,8 +60,10 @@ public class HadoopIndCountProcMapper extends Mapper<LongWritable, Text, Text, T
 		* (x,y,Z), ((x,y,Z),count)
 		*/
 		for(int x=0;x<variables.size();++x) {
+			int xx = Integer.decode(variables.get(x).replace("v", ""));
 			for(int y=0;y<variables.size();++y) {
-				if(x!=y && pat.getEdge(x, y) != Pattern.EdgeType.None) {//check if x and y are connected?
+				int yy = Integer.decode(variables.get(y).replace("v", ""));
+				if(x!=y && pat.getEdge(xx, yy) != Pattern.EdgeType.None) {//check if x and y are connected?
 					mykey = variables.get(x) + "," + variables.get(y);
 					myvalue = values.get(x) + "," + values.get(y);
 					boolean all_connected = true;
@@ -69,7 +71,8 @@ public class HadoopIndCountProcMapper extends Mapper<LongWritable, Text, Text, T
 						//check if all variables in Z are connected to x
 						for(int z=0;z<variables.size();++z) {
 							if(z!=x && z!=y) {
-								if(pat.getEdge(x, z) == Pattern.EdgeType.None) {
+								int zz=Integer.decode(variables.get(z).replace("v", ""));;
+								if(pat.getEdge(xx, zz) == Pattern.EdgeType.None) {
 									all_connected = false;
 									break;
 								}

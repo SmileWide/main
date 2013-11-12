@@ -55,6 +55,7 @@ public class HadoopIndependenceStep extends IndependenceStep {
 				FileReader fileReader = new FileReader(file);
 				BufferedReader bufferedReader = new BufferedReader(fileReader);
 				String line;
+				int counter=0;
 				while ((line = bufferedReader.readLine()) != null) {
 					String[] contents = line.split("\t");
 					String[] variables = contents[0].replace("v","").split(",");
@@ -62,6 +63,7 @@ public class HadoopIndependenceStep extends IndependenceStep {
 					int y = Integer.decode(variables[1]);
 					pat.setEdge(x, y, EdgeType.None);
 					pat.setEdge(y, x, EdgeType.None);
+					counter++;
 					if(adjacency > 0) {
 						String[] sepset = contents[1].replace("v","").replace("{","").replace("}", "").split(",");
 						for(int z=0;z<sepset.length;++z) {
@@ -71,6 +73,7 @@ public class HadoopIndependenceStep extends IndependenceStep {
 						}
 					}
 				}
+				System.out.println("Removed " + counter + " edges this iteration!");
 				fileReader.close();
 				file.delete();
 			} catch (IOException e) {

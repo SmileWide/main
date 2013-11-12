@@ -35,6 +35,7 @@ public class BasicIndependenceStep extends IndependenceStep {
         int card = 0;
         while (true)
         {
+        	int counter=0;
             for (int x = 0; x < nvar; x++)
             {
                 for (int y = x + 1; y < nvar; y++)
@@ -50,9 +51,11 @@ public class BasicIndependenceStep extends IndependenceStep {
                         pat.setEdge(y, x, Pattern.EdgeType.None);
                         sepsets.get(x).set(y,sepset);
                         sepsets.get(y).set(x,sepset);
+                        counter++;
                     }
                 }
             }
+			System.out.println("Removed " + counter + " edges this iteration!");
             card++;
             if (card > nvar - 2 || card > maxAdjacency)
             {
