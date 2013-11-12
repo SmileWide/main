@@ -56,6 +56,22 @@ public class HadoopIndCountProcMapper extends Mapper<LongWritable, Text, Text, T
 			variables.add(assignment[0]);
 			values.add(assignment[1]);
 		}
+		//generateTestCombos(context,variables,values,pair);
+		//NEW VERSION OF CODE, NO NEED TO GENERATE ALL POSSIBLE COMBINATIONS
+		for(int x=0;x<variables.size();++x) {
+			if(x==0) {
+				mykey = variables.get(x);
+				myvalue = values.get(x);
+			} else {
+				mykey += ","+variables.get(x);
+				myvalue += ","+values.get(x);
+			}
+		}
+		myvalue+="="+pair[1];
+		context.write(new Text(mykey), new Text(myvalue));		
+	}
+	
+	void generateTestCombos(Context context, ArrayList<String> variables,ArrayList<String> values, String[] pair) throws IOException, InterruptedException {
 		/*from the created counts we generate all possible combinations of
 		* (x,y,Z), ((x,y,Z),count)
 		*/
@@ -87,5 +103,6 @@ public class HadoopIndCountProcMapper extends Mapper<LongWritable, Text, Text, T
 				}
 			}
 		}
+		
 	}
 }
