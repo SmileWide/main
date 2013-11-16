@@ -289,11 +289,11 @@ public class PC {
 	public static void main(String args[])
 	{
 		SMILEData ds = new SMILEData();
-		ds.Read("../input/Hepar14k.txt");
+		ds.Read("../input/Cpcs179.txt");
 		Pattern pat = new Pattern();
 		PC alg = new PC();
-		//alg.istep = new HadoopIndependenceStep();
-		alg.maxAdjacency = 8;
+		alg.istep = new HadoopIndependenceStep();
+		alg.maxAdjacency = 1;
 		alg.significance = 0.05;
 		pat = alg.Learn(ds);
 		pat.Print();

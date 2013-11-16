@@ -30,7 +30,7 @@ import smile.wide.utils.Pair;
  * @author m.a.dejongh@gmail.com
  *
  */
-public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
+public class ChenIndCounterMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
 	String record = new String();
 	int maxAdjacency = 0;
 	/** Initializes class parameters*/

@@ -25,7 +25,7 @@ import org.apache.hadoop.mapreduce.*;
 /**Reducer class
  * @author m.a.dejongh@gmail.com
  */
-public class HadoopIndCountProcReducer extends Reducer<Text, Text, Text, Text> {
+public class ChenIndCountProcReducer extends Reducer<Text, Text, Text, Text> {
 	String mykey = new String();
 	String temp = new String();
 	@Override

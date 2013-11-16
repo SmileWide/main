@@ -57,6 +57,9 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 
 	void calculateCounts(Configuration conf) throws Exception {
 		//init job
+		conf.set("mapred.compress.map.output", "true");
+		conf.set("mapred.map.output.compression.codec", "org.apache.hadoop.io.compress.SnappyCodec"); 
+
 		Job job = new Job(conf);
 		job.setJobName("Distributed Independence Test - Calculate Counts - Iteration " + conf.get("maxAdjacency"));
 		job.setJarByClass(HadoopIndependenceJob.class);
@@ -68,6 +71,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 		job.setInputFormatClass(TextInputFormat.class);
 		job.setNumReduceTasks(240);
 
+		
 		//Set input and output paths
 		Path inputPath = new Path(conf.get("datainput"));
 		FileInputFormat.setInputPaths(job, inputPath);

@@ -27,7 +27,7 @@ import org.apache.hadoop.mapreduce.*;
  * @author m.a.dejongh@gmail.com
  *
  */
-public class HadoopIndCountProcMapper extends Mapper<LongWritable, Text, Text, Text> {
+public class ChenIndCountProcMapper extends Mapper<LongWritable, Text, Text, Text> {
 	String record = new String();
 	String mykey = new String();
 	String myvalue = new String();

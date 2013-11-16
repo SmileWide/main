@@ -24,7 +24,7 @@ import org.apache.hadoop.mapreduce.*;
 /**Reducer class
  * @author m.a.dejongh@gmail.com
  */
-public class HadoopIndCounterReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+public class ChenIndCounterReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
 	@Override
 	/** Reduce function, for now should generate counts*/
 	public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
