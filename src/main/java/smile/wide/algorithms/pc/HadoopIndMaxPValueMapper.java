@@ -17,7 +17,6 @@
 package smile.wide.algorithms.pc;
 
 import java.io.IOException;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
 

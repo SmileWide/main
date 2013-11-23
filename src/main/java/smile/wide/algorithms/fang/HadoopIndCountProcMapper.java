@@ -18,7 +18,6 @@ package smile.wide.algorithms.fang;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
 

@@ -17,21 +17,32 @@
 package smile.wide.algorithms.chen;
 
 import java.io.IOException;
-
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
 
-/**Reducer class
+/**
+ * Mapper
  * @author m.a.dejongh@gmail.com
+ *
  */
-public class ChenIndCounterReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+public class ChenMICounterMapper extends Mapper<LongWritable, Text, Text, VIntWritable> {
+	String record = new String();
+	String assignment = new String();
+	VIntWritable one = new VIntWritable(1);
+	
+	/**Mapper
+	 */
 	@Override
-	/** Reduce function, for now should generate counts*/
-	public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
-		int total = 0;
-		for (IntWritable p: values) {
-			total += p.get();
+	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+		record = value.toString();
+		String[] values = record.split(",|\t| ");
+		for(int i = 0; i < values.length ; ++i) {
+			assignment="v"+i+"="+values[i];
+			context.write(new Text(assignment), one);
+			for(int j=i+1; j < values.length ; ++j) {
+				assignment="v"+i+"="+values[i]+"+v"+j+"="+values[j];
+				context.write(new Text(assignment), one);
+			}
 		}
-		context.write(key, new IntWritable(total));
 	}
 }
