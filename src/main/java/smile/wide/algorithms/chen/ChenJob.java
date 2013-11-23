@@ -16,12 +16,17 @@
 */
 package smile.wide.algorithms.chen;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.VIntWritable;
@@ -44,7 +49,7 @@ import smile.wide.utils.Pattern.EdgeType;
  *  Retrieves output data file
  * @author m.a.dejongh@gmail.com
  */
-public class ChenIndependenceJob extends Configured implements Tool {
+public class ChenJob extends Configured implements Tool {
 	/** Sets up the hadoop job and sends it to the cluster
 	 * waits for the job to be completed.*/
     ArrayList<ArrayList<Set<Integer> > > sepsets = new ArrayList<ArrayList<Set<Integer> > >();
@@ -114,6 +119,7 @@ public class ChenIndependenceJob extends Configured implements Tool {
 			}
 		}
 		orientEdges();
+		pat.Print();
 		return 0;
 	}
 
@@ -371,7 +377,7 @@ public class ChenIndependenceJob extends Configured implements Tool {
 		//init job
 		Job job = new Job(conf);
 		job.setJobName("Distributed Mutual Information - Calculate Counts");
-		job.setJarByClass(ChenIndependenceJob.class);
+		job.setJarByClass(ChenJob.class);
 		job.setMapperClass(ChenMICounterMapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(VIntWritable.class);
@@ -389,6 +395,12 @@ public class ChenIndependenceJob extends Configured implements Tool {
 		//Run the job
 		job.waitForCompletion(true);
 		
+		//download result file
+		FileSystem dfs = FileSystem.get(conf);
+		outputPath.suffix("/part-r-00000");
+		String outputfile = conf.get("countlist");
+		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
+
 		/*
 		Calculate_MI:
 		 */
@@ -413,7 +425,7 @@ public class ChenIndependenceJob extends Configured implements Tool {
 		//init job
 		Job job = new Job(conf);
 		job.setJobName("Distributed Conditional Mutual Information - Calculate Counts");
-		job.setJarByClass(ChenIndependenceJob.class);
+		job.setJarByClass(ChenJob.class);
 		job.setMapperClass(ChenCMICounterMapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(VIntWritable.class);
@@ -430,6 +442,29 @@ public class ChenIndependenceJob extends Configured implements Tool {
 
 		//Run the job
 		job.waitForCompletion(true);
+
+		//download result file
+		FileSystem dfs = FileSystem.get(conf);
+		outputPath.suffix("/part-r-00000");
+		String outputfile = conf.get("countlist");
+		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
+
+		//retrieve results here
+		try {
+			File file = new File(outputfile);
+			FileReader fileReader = new FileReader(file);
+			BufferedReader bufferedReader = new BufferedReader(fileReader);
+			String line;
+			while ((line = bufferedReader.readLine()) != null) {
+				String[] contents = line.split("\t");
+				//do stuff here
+			}
+			fileReader.close();
+			file.delete();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 		
 		/*
 		Calculate_CMI:
@@ -441,7 +476,13 @@ public class ChenIndependenceJob extends Configured implements Tool {
 	/** main function, executes the job on the cluster*/
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		int exitCode = ToolRunner.run(conf, new ChenIndependenceJob(), args);
+		conf.setInt("nvar", 10);
+		conf.setFloat("epsilon", (float) 0.05);
+		conf.set("datainput", "somewhere");
+		conf.set("countoutput", "somewhere");
+		conf.set("countlist","mycounts.txt");
+		
+		int exitCode = ToolRunner.run(conf, new ChenJob(), args);
 		System.exit(exitCode);
 	}
 }
