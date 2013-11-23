@@ -18,13 +18,11 @@ package smile.wide.algorithms.chen;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.VIntWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -49,20 +47,24 @@ import smile.wide.utils.Pattern.EdgeType;
 public class ChenIndependenceJob extends Configured implements Tool {
 	/** Sets up the hadoop job and sends it to the cluster
 	 * waits for the job to be completed.*/
+    ArrayList<ArrayList<Set<Integer> > > sepsets = new ArrayList<ArrayList<Set<Integer> > >();
 	Pattern pat = new Pattern();
 	double epsilon = 0;
+	Configuration conf = null;
+	int nvar = 0;
+	
 	@Override
 	public int run(String[] params) throws Exception {
-		Configuration conf = super.getConf();
+		conf = super.getConf();
 
+		//get number of variables
+		nvar = conf.getInt("nvar", 0);
 		//get pattern
-		pat.setSize(10);
+		pat.setSize(nvar);
 		//get epsilon
-		epsilon = 0.05;
+		epsilon = conf.getFloat("epsilon", 0);
 
-		int nvar = pat.getSize();
-        // create sepsets
-        ArrayList<ArrayList<Set<Integer> > > sepsets = new ArrayList<ArrayList<Set<Integer> > >();
+		// create sepsets
         for (int x=0; x< nvar; x++) {
         	sepsets.add(new ArrayList<Set<Integer> >());
         }
@@ -73,12 +75,11 @@ public class ChenIndependenceJob extends Configured implements Tool {
             }
         }
 		
-		
 		/*from paper Chen et al. 2011:*/
  
 		//Begin [Drafting]
 		ArrayList<Pair<Pair<Integer,Integer>,Double>> L = new ArrayList<Pair<Pair<Integer,Integer>,Double>>();
-		calculateMRMI(conf,L);
+		calculateMRMI(L);
 		for(Pair<Pair<Integer,Integer>,Double> p : L) {
 			int x = p.getFirst().getFirst();
 			int y = p.getFirst().getSecond();
@@ -116,75 +117,257 @@ public class ChenIndependenceJob extends Configured implements Tool {
 		return 0;
 	}
 
+	boolean depthFirstSearch(Set<Integer> marked, int current, int target) {
+		if( !marked.contains(current) ){
+			marked.add(current);
+			if(pat.getEdge(current, target) != Pattern.EdgeType.None)
+				return true;
+			for(int i = 0; i < pat.getSize();++i) {
+				if(pat.getEdge(current, i) != Pattern.EdgeType.None) {
+					if(depthFirstSearch(marked,i,target));
+						return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	boolean adjacencyPaths(int x, int y) {
-		/*
-			AdjacencyPath
-			Require: X, Y, and network
-			Any path between X and Y ?
-		 */
-		return true;
+		boolean edge_exists = false;
+		if(pat.getEdge(x, y) != EdgeType.None) {
+			edge_exists = true;
+			pat.setEdge(x, y, EdgeType.None);
+			pat.setEdge(y, x, EdgeType.None);
+		}
+		Set<Integer> marked = new HashSet<Integer>();
+		boolean result = depthFirstSearch(marked, x, y);
+		if(edge_exists) {
+			pat.setEdge(x, y, EdgeType.Undirected);
+			pat.setEdge(y, x, EdgeType.Undirected);
+		}
+		return result;
 	}
 	
-	boolean edgeNeeded(int x, int y) {
-		/*
-		EdgeNeeded
-		Require <X,Y>, V={all attributes}, E={current edge list}
-		D(<X,Y>)=MinimumCutSet(<X,Y>,E)
-		NewThread(MR_CMI(<X,Y>,D(<X,Y>)))
-		I(X,Y|D(<X,Y>)) = Calculate_CMI(<X,Y>,D(<X,Y>)))
-		If I(X,Y|D(<X,Y>)) < epsilon
-			return false
-		else
-			return true
-		*/
+	boolean depthFirstSearchPaths(Set<Integer> marked, Set<Integer> result, int current, int target) {
+		boolean onpath = false;
+		if( !marked.contains(current) ){
+			marked.add(current);
+			if(pat.getEdge(current, target) != Pattern.EdgeType.None)
+			{
+				result.add(current);
+				return true;
+			}
+			for(int i = 0; i < pat.getSize();++i) {
+				if(pat.getEdge(current, i) != Pattern.EdgeType.None) {
+					if(depthFirstSearchPaths(marked,result,i,target)) {
+						onpath = true;
+						result.add(current);
+					}
+				}
+			}
+		}
+		return onpath;
+	}
+
+	boolean edgeNeeded(int x, int y) throws Exception {
+		Set<Integer> cutset = minimumCutSet(x,y);
+		double IxyZ = calculateMRCMI(x,y,cutset);
+		if(IxyZ < epsilon) {
+			sepsets.get(x).set(y,cutset);
+			sepsets.get(y).set(x,cutset);
+			return false;
+		}
 		return true;
 	}
 		
 	Set<Integer> minimumCutSet(int x, int y) {
-		/*
-			we need special case of mincutset that separates var X from var y (i.e. cutting all paths)
-			l. if exists, temporarily remove edge between X and Y
-			2. Find all neighbours from X and from Y
-			3. Smallest set is mincutset??? 
-			 
-			--Stoer-Wagner--
-			MINIMUMCUTPHASE(G, w, a)
-			A <- {a}
-			while A != V
-				add to A the most tightly connected vertex
-				store the cut-of-the-phase and shrink G by merging the two vertices added last
-			
-			Most tightly connected vertex:
-			z !element A such that w(A,z) = max{w(A,y)|y !element A},
-			
-			MINIMUMCUT(G, w, a)
-			while |V| > 1
-				MINIMUMCUTPHASE(G, w, a)
-				if the cut-of-the-phase is lighter than the current minimum cut
-					then store the cut-of-the-phase as the current minimum cut
+		boolean edge_exists = false;
+		if(pat.getEdge(x, y) != EdgeType.None) {
+			edge_exists = true;
+			pat.setEdge(x, y, EdgeType.None);
+			pat.setEdge(y, x, EdgeType.None);
+		}
+		
+		Set<Integer> Xnbr = new HashSet<Integer>();
+		Set<Integer> Ynbr = new HashSet<Integer>();
+		Set<Integer> SX = new HashSet<Integer>();
+		Set<Integer> SY = new HashSet<Integer>();
 
-		 */
-		HashSet<Integer> set = new HashSet<Integer>();
-		return set;
+		for(int i=0;i<pat.getSize();++i) {
+			if(pat.getEdge(x, i) != EdgeType.None) {
+				Xnbr.add(i);
+				SX.add(i);
+			}
+			if(pat.getEdge(y, i) != EdgeType.None) {
+				Ynbr.add(i);
+				SY.add(i);
+			}
+		}
+		
+		Set<Integer> marked = new HashSet<Integer>();
+		Set<Integer> adjpath = new HashSet<Integer>();
+		depthFirstSearchPaths(marked,adjpath,x,y);
+		adjpath.remove(x);
+
+		SX.retainAll(adjpath);
+		SY.retainAll(adjpath);
+
+		//get neighbours of i from Sx, substract Sx from neighbours
+		Set<Integer> temp = new HashSet<Integer>();
+		Set<Integer> SXp = new HashSet<Integer>();
+		for(Integer j : SX) {
+			temp.clear();
+			for(int i=0;i<pat.getSize();++i) {
+				if(pat.getEdge(j, i) != EdgeType.None) {
+					temp.add(i);
+				}
+			}			
+			temp.removeAll(SX);
+			SXp.addAll(temp);
+		}
+		SXp.retainAll(adjpath);
+
+		Set<Integer> SYp = new HashSet<Integer>();
+		for(Integer j : SY) {
+			temp.clear();
+			for(int i=0;i<pat.getSize();++i) {
+				if(pat.getEdge(j, i) != EdgeType.None) {
+					temp.add(i);
+				}
+			}			
+			temp.removeAll(SY);
+			SYp.addAll(temp);
+		}
+		SYp.retainAll(adjpath);
+		
+		Set<Integer> result = null;
+		if(SXp.size() < SYp.size())
+			result = SXp;
+		else
+			result = SYp;
+		
+		if(edge_exists) {
+			pat.setEdge(x, y, EdgeType.Undirected);
+			pat.setEdge(y, x, EdgeType.Undirected);
+		}
+		return result;
 	}
-	
+
+    private boolean sepsetHas(ArrayList<ArrayList<Set<Integer> > > sepsets, int x, int y, int e)
+    {
+        // check if the given sepset contains element e
+        Set<Integer> sepset = sepsets.get(x).get(y);
+        if(sepset == null)
+        	return false;
+        return sepset.contains(e);
+    }
+    
 	void orientEdges() {
-		/*
-		OrientEdges (PC orientation rules???)
-		Require: V,E
-		For any three nodes X, Y and Z that X and Y , and Y and Z, are directly connected; and X and Z are not directly connected
-			if {X, Z}, C ∈ CutSet and Y ∈ C, or {X, Z}, C ∈ CutSet
-				let X be a parent of Y and let Z be a parent of Y .
-		For any three nodes X, Y, Z, in V
-			if (i) X is a parent of Y , (ii) Y and Z are adjacent,(iii) X and Z are not adjacent, and (iv) edge (Y, Z) is not oriented,
-				let Y be a parent of Z.
-		For any edge (X, Y ) that is not oriented.
-			If there is a directed path from X to Y
-				let X be a parent of Y .
-		*/
+		//Their orientation rules are exactly the same as PC
+        //orient edges as v-structure
+        for (int i = 0; i < nvar; i++)
+        {
+            for (int adj1 = 0; adj1 < nvar; adj1++)
+            {
+                if (i != adj1 && (pat.getEdge(adj1, i) != Pattern.EdgeType.None || pat.getEdge(i, adj1) != Pattern.EdgeType.None))
+                {
+                    for (int adj2 = adj1 + 1; adj2 < nvar; adj2++)
+                    {
+                        if (i != adj2 && (pat.getEdge(adj2, i) != Pattern.EdgeType.None || pat.getEdge(i, adj2) != Pattern.EdgeType.None))
+                        {
+                            if (pat.getEdge(adj1, adj2) == Pattern.EdgeType.None && pat.getEdge(adj2, adj1) == Pattern.EdgeType.None && !sepsetHas(sepsets, adj1, adj2, i))
+                            {
+                                pat.setEdge(adj1, i, Pattern.EdgeType.Directed);
+                                pat.setEdge(adj2, i, Pattern.EdgeType.Directed);
+                                if (pat.getEdge(i, adj1) == Pattern.EdgeType.Undirected)
+                                {
+                                    pat.setEdge(i, adj1, Pattern.EdgeType.None);
+                                }
+                                if (pat.getEdge(i, adj2) == Pattern.EdgeType.Undirected)
+                                {
+                                    pat.setEdge(i, adj2, Pattern.EdgeType.None);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        //orient remaining edges
+        boolean update = true;
+        while (update)
+        {
+            update = false;
+            // a) orient x -> y - z as x -> y -> z
+            for (int i = 0; i < nvar; i++)
+            {
+                for (int adj1 = 0; adj1 < nvar; adj1++)
+                {
+                    for (int adj2 = adj1 + 1; adj2 < nvar; adj2++)
+                    {
+                        if (i != adj1 && i != adj2 && pat.getEdge(adj1, i) == Pattern.EdgeType.Directed && pat.getEdge(adj2, i) == Pattern.EdgeType.Undirected && pat.getEdge(adj1, adj2) == Pattern.EdgeType.None && pat.getEdge(adj2, adj1) == Pattern.EdgeType.None)
+                        {
+                            if (!pat.hasDirectedPath(adj2, i))
+                            {
+                                pat.setEdge(i, adj2, Pattern.EdgeType.Directed);
+                                pat.setEdge(adj2, i, Pattern.EdgeType.None);
+                                update = true;
+                            }
+                        }
+                        else
+                        {
+                            if (i != adj1 && i != adj2 && pat.getEdge(adj2, i) == Pattern.EdgeType.Directed && pat.getEdge(adj1, i) == Pattern.EdgeType.Undirected && pat.getEdge(adj1, adj2) == Pattern.EdgeType.None && pat.getEdge(adj2, adj1) == Pattern.EdgeType.None)
+                            {
+                                if (!pat.hasDirectedPath(adj1, i))
+                                {
+                                    pat.setEdge(i, adj1, Pattern.EdgeType.Directed);
+                                    pat.setEdge(adj1, i, Pattern.EdgeType.None);
+                                    update = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // b) orient x - z as x -> z if there is a path x -> ... -> z
+            for (int x = 0; x < nvar; x++)
+            {
+                for (int y = x + 1; y < nvar; y++)
+                {
+                    if (pat.getEdge(x, y) == Pattern.EdgeType.Undirected)
+                    {
+                        // search for directed path from x -> y and y -> x
+                        boolean xy = pat.hasDirectedPath(x, y);
+                        boolean yx = pat.hasDirectedPath(y, x);
+                        if (xy && yx)
+                        {
+                            assert(false);
+                        }
+                        else
+                        {
+                            if (xy)
+                            {
+                                pat.setEdge(x, y, Pattern.EdgeType.Directed);
+                                pat.setEdge(y, x, Pattern.EdgeType.None);
+                                update = true;
+                            }
+                            else
+                            {
+                                if (yx)
+                                {
+                                    pat.setEdge(y, x, Pattern.EdgeType.Directed);
+                                    pat.setEdge(x, y, Pattern.EdgeType.None);
+                                    update = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 	}
 	
-	void calculateMRMI(Configuration conf,ArrayList<Pair<Pair<Integer,Integer>,Double>> L) throws Exception {
+	void calculateMRMI(ArrayList<Pair<Pair<Integer,Integer>,Double>> L) throws Exception {
 		//init job
 		Job job = new Job(conf);
 		job.setJobName("Distributed Mutual Information - Calculate Counts");
@@ -220,7 +403,7 @@ public class ChenIndependenceJob extends Configured implements Tool {
 		//Sort L into decreasing order
 	}
 	
-	double calculateMRCMI(Configuration conf, int x, int y, Set<Integer> Z) throws Exception {
+	double calculateMRCMI(int x, int y, Set<Integer> Z) throws Exception {
 		//pass parameters
 		conf.setInt("Vx", x);
 		conf.setInt("Vy", y);
