@@ -21,7 +21,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
@@ -373,6 +379,13 @@ public class ChenJob extends Configured implements Tool {
         }
 	}
 	
+	class MIComparator implements Comparator<Pair<Pair<Integer,Integer>,Double>> {
+		/**compare function*/
+		@Override
+		public int compare(Pair<Pair<Integer,Integer>,Double> arg0, Pair<Pair<Integer,Integer>,Double> arg1) {
+			return arg0.getSecond().compareTo(arg1.getSecond());
+		}
+	}	
 	void calculateMRMI(ArrayList<Pair<Pair<Integer,Integer>,Double>> L) throws Exception {
 		//init job
 		Job job = new Job(conf);
@@ -381,6 +394,7 @@ public class ChenJob extends Configured implements Tool {
 		job.setMapperClass(ChenMICounterMapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(VIntWritable.class);
+		job.setCombinerClass(ChenCounterReducer.class);
 		job.setReducerClass(ChenCounterReducer.class);
 		job.setInputFormatClass(TextInputFormat.class);
 		job.setNumReduceTasks(1);
@@ -401,18 +415,64 @@ public class ChenJob extends Configured implements Tool {
 		String outputfile = conf.get("countlist");
 		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
 
+		Map<String,Integer> counts = new HashMap<String,Integer>();
+		List<HashSet<String>> cardinalities = new ArrayList<HashSet<String>>();
+		for(int i=0;i<nvar;++i)
+			cardinalities.add(new HashSet<String>());
+		
+		//retrieve results here
+		try {
+			File file = new File(outputfile);
+			FileReader fileReader = new FileReader(file);
+			BufferedReader bufferedReader = new BufferedReader(fileReader);
+			String line;
+			while ((line = bufferedReader.readLine()) != null) {
+				String[] contents = line.split("\t");
+				counts.put(contents[0], Integer.decode(contents[1]));
+				String[] assignments = contents[0].split("\\+");
+				for(int i=0;i<assignments.length;++i) {
+					String[] parts = assignments[i].split("=");
+					int index = Integer.decode(parts[0].substring(1));
+					cardinalities.get(index).add(parts[1]);
+				}
+			}
+			fileReader.close();
+			file.delete();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		//get total nr of records
+		double N = 0;
+		for(String s : cardinalities.get(0)) {
+			N+=counts.get("v0="+s);
+		}
 		/*
 		Calculate_MI:
+		//I(X,Y) = Sum_{x,y}P(x,y)log({P(x,y)}/{P(x)P(y)})
 		 */
 		for(int x = 0; x<pat.getSize();++x) {
 			for(int y=x+1;y<pat.getSize();++y) {
-				//I(X,Y) = Sum_{x,y}P(x,y)log({P(x,y)}/{P(x)P(y)})
 				double Ixy = 0;
+				Iterator<String> itX = cardinalities.get(x).iterator();
+				while(itX.hasNext()) {
+					String assignment_x = "v"+x+"="+itX.next();
+					Iterator<String> itY = cardinalities.get(y).iterator();
+					while(itY.hasNext()) {
+						String assignment_y = "v"+y+"="+itY.next();
+						double Nxy = counts.get(assignment_x+"+"+assignment_y);
+						double Nx = counts.get(assignment_x);
+						double Ny = counts.get(assignment_y);
+						if(Nxy > 0)
+							Ixy += (Nxy / N)*(Math.log(Nxy)+Math.log(N)-Math.log(Nx)-Math.log(Ny));
+					}
+				}
 				if(Ixy > epsilon)
 					L.add(new Pair<Pair<Integer,Integer>,Double>(new Pair<Integer,Integer>(x,y),Ixy));
 			}
 		}
 		//Sort L into decreasing order
+		Collections.sort(L, new MIComparator());
 	}
 	
 	double calculateMRCMI(int x, int y, Set<Integer> Z) throws Exception {
@@ -429,6 +489,7 @@ public class ChenJob extends Configured implements Tool {
 		job.setMapperClass(ChenCMICounterMapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(VIntWritable.class);
+		job.setCombinerClass(ChenCounterReducer.class);
 		job.setReducerClass(ChenCounterReducer.class);
 		job.setInputFormatClass(TextInputFormat.class);
 		job.setNumReduceTasks(1);
@@ -449,6 +510,11 @@ public class ChenJob extends Configured implements Tool {
 		String outputfile = conf.get("countlist");
 		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
 
+		Map<String,Integer> counts = new HashMap<String,Integer>();
+		List<HashSet<String>> cardinalities = new ArrayList<HashSet<String>>();
+		for(int i=0;i<nvar;++i)
+			cardinalities.add(new HashSet<String>());
+
 		//retrieve results here
 		try {
 			File file = new File(outputfile);
@@ -457,26 +523,80 @@ public class ChenJob extends Configured implements Tool {
 			String line;
 			while ((line = bufferedReader.readLine()) != null) {
 				String[] contents = line.split("\t");
-				//do stuff here
+				counts.put(contents[0], Integer.decode(contents[1]));
+				String[] assignments = contents[0].split("\\+");
+				for(int i=0;i<assignments.length;++i) {
+					String[] parts = assignments[i].split("=");
+					int index = Integer.decode(parts[0].substring(1));
+					cardinalities.get(index).add(parts[1]);
+				}
 			}
 			fileReader.close();
 			file.delete();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		ArrayList<String> varids = new ArrayList<String>();
+		ArrayList<Integer> varZ = new ArrayList<Integer>();
+		for(Integer z : Z) {
+			varids.add("v"+z);
+			varZ.add(z);
+		}
+		ArrayList<Iterator<String>> indices = new ArrayList<Iterator<String>>();
 
-		
-		/*
-		Calculate_CMI:
-		I(A,B|C) = Sum_{a,b,c} P(a,b|c)log({P(a,b|C}/{P(a|c)P(b|c)})
-		 */
-		return 0.0;
+		double IxyZ = 0;
+		Iterator<String> itX = cardinalities.get(x).iterator();
+		while(itX.hasNext()) {
+			String assignment_x = "v"+x+"="+itX.next();
+			Iterator<String> itY = cardinalities.get(y).iterator();
+			while(itY.hasNext()) {
+				String assignment_y = "v"+y+"="+itY.next();
+
+				indices.clear();
+				for(Integer z : Z)
+					indices.add(cardinalities.get(z).iterator());
+				ArrayList<String> cur_values = new ArrayList<String>();
+				for(Iterator<String> itZ: indices)
+					cur_values.add(itZ.next());
+
+				boolean done =false;
+				while(!done) {
+					int cntr=0;
+					String assignment_Z="";
+					for(String z: cur_values) {
+						if(cntr==0)
+							assignment_Z=varids.get(cntr)+"=";
+						else
+							assignment_Z+="+"+varids.get(cntr)+"=";
+						assignment_Z+= z;
+						++cntr;
+					}
+					double NxyZ = counts.get(assignment_x+"+"+assignment_y+"+"+assignment_Z);
+					double NxZ = counts.get(assignment_x+"+"+assignment_Z);
+					double NyZ = counts.get(assignment_y+"+"+assignment_Z);
+					double NZ = counts.get(assignment_Z);
+					if(NxyZ > 0)
+						IxyZ += (NxyZ / NZ)*(Math.log(NxyZ)+Math.log(NZ)-Math.log(NxZ)-Math.log(NyZ));
+					for(int j=0;j<indices.size();++j) {
+						if(indices.get(j).hasNext()) {
+							cur_values.set(j, indices.get(j).next());
+							break;
+						}
+						else {
+							indices.set(j, cardinalities.get(varZ.get(j)).iterator());
+							cur_values.set(j, indices.get(j).next());
+						}
+					}
+				}
+			}
+		}
+		return IxyZ;
 	}
 		
 	/** main function, executes the job on the cluster*/
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		conf.setInt("nvar", 10);
+		conf.setInt("nvar", 179);
 		conf.setFloat("epsilon", (float) 0.05);
 		conf.set("datainput", "somewhere");
 		conf.set("countoutput", "somewhere");
