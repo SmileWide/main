@@ -24,14 +24,14 @@ import org.apache.hadoop.mapreduce.*;
 /**Reducer class
  * @author m.a.dejongh@gmail.com
  */
-public class HadoopIndCounterReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+public class FangCounterReducer extends Reducer<Text, VIntWritable, Text, VIntWritable> {
 	@Override
 	/** Reduce function, for now should generate counts*/
-	public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+	public void reduce(Text key, Iterable<VIntWritable> values, Context context) throws IOException, InterruptedException {
 		int total = 0;
-		for (IntWritable p: values) {
+		for (VIntWritable p: values) {
 			total += p.get();
 		}
-		context.write(key, new IntWritable(total));
+		context.write(key, new VIntWritable(total));
 	}
 }

@@ -14,39 +14,31 @@
    See the License for the specific language governing
      permissions and limitations under the License.
 */
-package smile.wide.algorithms.pc;
+package smile.wide.algorithms.fang;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
-
-import smile.wide.utils.Pair;
-import smile.wide.utils.Pattern;
 
 /**
  * Mapper
  * @author m.a.dejongh@gmail.com
  *
  */
-public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, VIntWritable> {
+public class FangCounterMapper extends Mapper<LongWritable, Text, Text, VIntWritable> {
 	String record = new String();
-	Pattern pat = new Pattern();
-	int maxAdjacency = 0;
+	int maxsetsize = 0;
 	VIntWritable one = new VIntWritable(1);
 	/** Initializes class parameters*/
 	@Override
 	protected void setup(Context context) {
 		Configuration conf = context.getConfiguration();
 		//set some constants here
-		maxAdjacency = conf.getInt("maxAdjacency", 0);
-		pat = new Pattern(conf.get("pattern"));
+		maxsetsize = conf.getInt("maxsetsize", 0);
 	}
 	
 	/**Mapper
@@ -55,87 +47,17 @@ public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, VIn
 	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException  {
 		record = value.toString();
 		String[] values = record.split(",|\t| ");
-		//HERE PARSE RECORD AND GENERATE ALL POSSIBLE COMBOS
-		//ArrayList<Pair<Integer,String>> set= new ArrayList<Pair<Integer,String>>();
-		//powerset(context,set,values,0,maxAdjacency+2);//not the most efficient way to do it, but works for now
-		setGenerator(context, values, maxAdjacency);
+		setFunction(context,maxsetsize,values);
 	}
 	
-	/**Powerset generator
-	 * 
-	 * @param context used for outputting MapReduce Key-Value pair
-	 * @param set current subset of powerset
-	 * @param vals complete array
-	 * @param vctr counter in array
-	 * @param max max size of subset
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	void powerset(Context context, ArrayList<Pair<Integer,String>> set, String[] vals, int vctr, int max) throws IOException, InterruptedException {
-		String assignment = "";
-		if(set.size()==max) {//now only generates sets of size max (which is all PC needs)
-			//have to search to see if nodes from one connected component
-			Set<Integer> nodes = new HashSet<Integer>();
-			Set<Integer> marked = new HashSet<Integer>();
-			for(Pair<Integer,String> p : set) {
-				nodes.add(p.getFirst());
-			}
-			depthFirstSearch(nodes,marked,nodes.iterator().next());
-			if(nodes.size() == marked.size()) {
-				for(int x=0; x<set.size();++x) {
-					if(assignment.length()>0) {
-						assignment+="+v"+set.get(x).getFirst()+"="+set.get(x).getSecond();
-					}
-					else
-						assignment="v"+set.get(x).getFirst()+"="+set.get(x).getSecond();
-				}
-				context.write(new Text(assignment), one);
-			}
-		}
-		if(set.size()+1<=max) {
-			for(int x=vctr;x<vals.length;++x) {
-				set.add(new Pair<Integer,String>(x,vals[x]));
-				powerset(context,set,vals,x+1,max);
-				set.remove(set.size()-1);
-			}
-		}
-	}
-	
-	void depthFirstSearch(Set<Integer> set, Set<Integer> marked, int current) {
-		if( !marked.contains(current) ){
-			marked.add(current);
-			for(Integer i : set) {
-				if(pat.getEdge(current, i) != Pattern.EdgeType.None) {
-					depthFirstSearch(set,marked,i);
-				}
-			}
-		}
-	}
-	
-	void setGenerator(Context context, String[] vals, int adjacency) throws IOException, InterruptedException {
-		for(int x=0;x<vals.length;++x) {
-			for(int y=0;y<vals.length;++y) {
-				if(x!=y && pat.getEdge(x,y) != Pattern.EdgeType.None) {
-					String assignment = "v"+x+"="+vals[x]+"+v"+y+"="+vals[y];
-					if(adjacency > 0)
-						sepsetFunction(context,x,y,adjacency,vals,assignment);
-					else if(x<y)
-						context.write(new Text(assignment), one);
-				}
-			}
-		}
-	}
-	
-	void sepsetFunction(Context context, int x, int y, int card, String[] vals, String assignment) throws IOException, InterruptedException {
+	void setFunction(Context context, int card, String[] vals) throws IOException, InterruptedException {
 		int nvar = vals.length;
         // populate elements vector
         ArrayList<Integer> elements=new ArrayList<Integer>();
         int i;
-        for (i = 0; i < nvar; i++) {
-            if (i != x && i != y && pat.getEdge(x, i) == Pattern.EdgeType.Undirected) {
-                    elements.add(i);
-            }
-        }
+        for (i = 0; i < nvar; i++)
+        	elements.add(i);
+
         // check for enough elements
         if ((int) elements.size() < card) {
             return;
@@ -155,10 +77,13 @@ public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, VIn
             for (i = 0; i < (int) binvec.size(); i++) {
                 if (binvec.get(i)) {
                     int z = elements.get(i);
-        			sepset += "+v"+z+"="+vals[z];
+                    if(sepset!="")
+                    	sepset += "+v"+z+"="+vals[z];
+                    else
+                    	sepset += "v"+z+"="+vals[z];
                 }
             }
-			context.write(new Text(assignment+sepset), one);//FIXED BUG, SHOULD HAVE SIGNIFICANTLY LESS KVPs
+            context.write(new Text(sepset), one);
         }
 	}
 	
