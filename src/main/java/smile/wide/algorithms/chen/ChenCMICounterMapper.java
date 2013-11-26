@@ -34,7 +34,7 @@ public class ChenCMICounterMapper extends Mapper<LongWritable, Text, Text, VIntW
 	VIntWritable one = new VIntWritable(1);
 	int x = 0;
 	int y = 0;
-	String[] sZ = {};
+	String ssZ = "";
 	Set<Integer> Z = new HashSet<Integer>();
 	String value1 = new String();
 	String value2 = new String();
@@ -46,32 +46,42 @@ public class ChenCMICounterMapper extends Mapper<LongWritable, Text, Text, VIntW
 		//set some constants here
 		x=conf.getInt("Vx", -1);
 		y=conf.getInt("Vy", -1);
-		sZ = conf.getStrings("Z");
+		ssZ = conf.get("Z","");
 	}
 	/**Mapper
 	 */
 	@Override
 	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-		for(int i=0;i<sZ.length;++i)
-			Z.add(Integer.decode(sZ[i]));
 		record = value.toString();
 		String[] values = record.split(",|\t| ");
-		value1="v"+x+values[x];
-		value2="v"+y+values[y];
+		value1="v"+x+"="+values[x];
+		value2="v"+y+"="+values[y];
 		boolean first=true;
 		value3="";
-		for(Integer z : Z) {
-			if(!first) {
-				value3+="+v"+z+"="+values[z];
-			}
-			else {
-				first = false;
-				value3="v"+z+"="+values[z];
+		if(ssZ != "") {
+			String[] sZ = ssZ.split(",");
+			for(int i=0;i<sZ.length;++i)
+				Z.add(Integer.decode(sZ[i]));
+			for(Integer z : Z) {
+				if(!first) {
+					value3+="+v"+z+"="+values[z];
+				}
+				else {
+					first = false;
+					value3="v"+z+"="+values[z];
+				}
 			}
 		}
-		context.write(new Text(value1+"+"+value3), one);
-		context.write(new Text(value2+"+"+value3), one);
-		context.write(new Text(value1+"+"+value2+"+"+value3), one);
-		context.write(new Text(value3), one);
+		if(value3 != "") {
+			context.write(new Text(value1+"+"+value3), one);
+			context.write(new Text(value2+"+"+value3), one);
+			context.write(new Text(value1+"+"+value2+"+"+value3), one);
+			context.write(new Text(value3), one);
+		}
+		else {
+			context.write(new Text(value1), one);
+			context.write(new Text(value2), one);
+			context.write(new Text(value1+"+"+value2), one);
+		}
 	}
 }

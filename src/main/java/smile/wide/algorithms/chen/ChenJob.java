@@ -67,7 +67,6 @@ public class ChenJob extends Configured implements Tool {
 	@Override
 	public int run(String[] params) throws Exception {
 		conf = super.getConf();
-
 		//get number of variables
 		nvar = conf.getInt("nvar", 0);
 		//get pattern
@@ -76,20 +75,19 @@ public class ChenJob extends Configured implements Tool {
 		epsilon = conf.getFloat("epsilon", 0);
 
 		// create sepsets
-        for (int x=0; x< nvar; x++) {
+        for (int x=0; x< nvar; x++)
         	sepsets.add(new ArrayList<Set<Integer> >());
-        }
         for (int i = 0; i < nvar; i++)
-        {
-            for (int x=0; x< nvar; x++) {
+            for (int x=0; x< nvar; x++)
             	sepsets.get(i).add(new HashSet<Integer>());
-            }
-        }
 		
 		/*from paper Chen et al. 2011:*/
  
 		//Begin [Drafting]
+		System.out.println("Begin Drafting");
 		ArrayList<Pair<Pair<Integer,Integer>,Double>> L = new ArrayList<Pair<Pair<Integer,Integer>,Double>>();
+		ArrayList<Pair<Pair<Integer,Integer>,Double>> removelist = new ArrayList<Pair<Pair<Integer,Integer>,Double>>();
+		
 		calculateMRMI(L);
 		for(Pair<Pair<Integer,Integer>,Double> p : L) {
 			int x = p.getFirst().getFirst();
@@ -97,25 +95,33 @@ public class ChenJob extends Configured implements Tool {
 			if(!adjacencyPaths(x,y)) {
 				pat.setEdge(x, y, EdgeType.Undirected);
 				pat.setEdge(y, x, EdgeType.Undirected);
-				L.remove(p);
+				removelist.add(p);
 			}
 		}
+		for(Pair<Pair<Integer,Integer>,Double> p : removelist)
+			L.remove(p);
+
 		//Begin [Thickening]
+		System.out.println("Begin Thickening");
 		for(Pair<Pair<Integer,Integer>,Double> p : L) {
 			int x = p.getFirst().getFirst();
 			int y = p.getFirst().getSecond();
+			System.out.println("-edgeNeeded("+x+","+y+")");
 			if(edgeNeeded(x,y)) {
 				pat.setEdge(x, y, EdgeType.Undirected);
 				pat.setEdge(y, x, EdgeType.Undirected);
 			}
 		}
+
 		//Begin [Thinning]
+		System.out.println("Begin thinning");
 		for(int x=0;x<pat.getSize();++x) {
 			for(int y=x+1;y<pat.getSize();++y) {
 				if(pat.getEdge(x,y)==EdgeType.Undirected) {
 					if(adjacencyPaths(x,y)) {
 						pat.setEdge(x, y, EdgeType.None);
 						pat.setEdge(y, x, EdgeType.None);
+						System.out.println("--edgeNeeded("+x+","+y+")");
 						if(edgeNeeded(x,y)) {
 							pat.setEdge(x, y, EdgeType.Undirected);
 							pat.setEdge(y, x, EdgeType.Undirected);
@@ -124,6 +130,7 @@ public class ChenJob extends Configured implements Tool {
 				}
 			}
 		}
+		System.out.println("Orient Edges");
 		orientEdges();
 		pat.Print();
 		return 0;
@@ -181,17 +188,6 @@ public class ChenJob extends Configured implements Tool {
 		return onpath;
 	}
 
-	boolean edgeNeeded(int x, int y) throws Exception {
-		Set<Integer> cutset = minimumCutSet(x,y);
-		double IxyZ = calculateMRCMI(x,y,cutset);
-		if(IxyZ < epsilon) {
-			sepsets.get(x).set(y,cutset);
-			sepsets.get(y).set(x,cutset);
-			return false;
-		}
-		return true;
-	}
-		
 	Set<Integer> minimumCutSet(int x, int y) {
 		boolean edge_exists = false;
 		if(pat.getEdge(x, y) != EdgeType.None) {
@@ -239,6 +235,7 @@ public class ChenJob extends Configured implements Tool {
 		}
 		SXp.retainAll(adjpath);
 
+		//get neighbours of i from Sy, substract Sy from neighbours
 		Set<Integer> SYp = new HashSet<Integer>();
 		for(Integer j : SY) {
 			temp.clear();
@@ -252,6 +249,7 @@ public class ChenJob extends Configured implements Tool {
 		}
 		SYp.retainAll(adjpath);
 		
+		//return smallest of two subsets
 		Set<Integer> result = null;
 		if(SXp.size() < SYp.size())
 			result = SXp;
@@ -265,6 +263,19 @@ public class ChenJob extends Configured implements Tool {
 		return result;
 	}
 
+	boolean edgeNeeded(int x, int y) throws Exception {
+		Set<Integer> cutset = minimumCutSet(x,y);
+		System.out.println("cutset: "+cutset);
+		double IxyZ = 2*epsilon;
+		if(!cutset.isEmpty())
+			IxyZ = calculateMRCMI(x,y,cutset);
+		if(IxyZ < epsilon) {
+			sepsets.get(x).set(y,cutset);
+			sepsets.get(y).set(x,cutset);
+			return false;
+		}
+		return true;
+	}
     private boolean sepsetHas(ArrayList<ArrayList<Set<Integer> > > sepsets, int x, int y, int e)
     {
         // check if the given sepset contains element e
@@ -387,6 +398,7 @@ public class ChenJob extends Configured implements Tool {
 		}
 	}	
 	void calculateMRMI(ArrayList<Pair<Pair<Integer,Integer>,Double>> L) throws Exception {
+
 		//init job
 		Job job = new Job(conf);
 		job.setJobName("Distributed Mutual Information - Calculate Counts");
@@ -460,9 +472,15 @@ public class ChenJob extends Configured implements Tool {
 					Iterator<String> itY = cardinalities.get(y).iterator();
 					while(itY.hasNext()) {
 						String assignment_y = "v"+y+"="+itY.next();
-						double Nxy = counts.get(assignment_x+"+"+assignment_y);
-						double Nx = counts.get(assignment_x);
-						double Ny = counts.get(assignment_y);
+						double Nxy = 0;
+						double Nx = 0;
+						double Ny = 0;
+						if(counts.get(assignment_x+"+"+assignment_y) != null)
+						{
+							Nxy = counts.get(assignment_x+"+"+assignment_y);
+							Nx = counts.get(assignment_x);
+							Ny = counts.get(assignment_y);
+						}
 						if(Nxy > 0)
 							Ixy += (Nxy / N)*(Math.log(Nxy)+Math.log(N)-Math.log(Nx)-Math.log(Ny));
 					}
@@ -479,12 +497,21 @@ public class ChenJob extends Configured implements Tool {
 		//pass parameters
 		conf.setInt("Vx", x);
 		conf.setInt("Vy", y);
-		String[] sZ = Z.toArray(new String[0]);
-		conf.setStrings("Z", sZ);
+		String ssZ = "";
+		boolean first = true;
+		for(Integer i : Z) {
+			if(first) {
+				first=false;
+				ssZ = i.toString();
+			}
+			else
+				ssZ += ","+i;
+		}
+		conf.set("Z", ssZ);
 		
 		//init job
 		Job job = new Job(conf);
-		job.setJobName("Distributed Conditional Mutual Information - Calculate Counts");
+		job.setJobName("Distributed Conditional Mutual Information - Calculate Counts: N("+x+","+y+"|"+Z+")");
 		job.setJarByClass(ChenJob.class);
 		job.setMapperClass(ChenCMICounterMapper.class);
 		job.setMapOutputKeyClass(Text.class);
@@ -555,10 +582,11 @@ public class ChenJob extends Configured implements Tool {
 				indices.clear();
 				for(Integer z : Z)
 					indices.add(cardinalities.get(z).iterator());
+				indices.add(null);
 				ArrayList<String> cur_values = new ArrayList<String>();
-				for(Iterator<String> itZ: indices)
-					cur_values.add(itZ.next());
-
+				for(int i=0;i<indices.size()-1;++i) {
+					cur_values.add(indices.get(i).next());
+				}
 				boolean done =false;
 				while(!done) {
 					int cntr=0;
@@ -571,13 +599,23 @@ public class ChenJob extends Configured implements Tool {
 						assignment_Z+= z;
 						++cntr;
 					}
-					double NxyZ = counts.get(assignment_x+"+"+assignment_y+"+"+assignment_Z);
-					double NxZ = counts.get(assignment_x+"+"+assignment_Z);
-					double NyZ = counts.get(assignment_y+"+"+assignment_Z);
-					double NZ = counts.get(assignment_Z);
+					double NxyZ = 0;
+					double NxZ = 0;
+					double NyZ = 0;
+					double NZ = 0;
+					if(counts.get(assignment_x+"+"+assignment_y+"+"+assignment_Z) != null) {
+						NxyZ = counts.get(assignment_x+"+"+assignment_y+"+"+assignment_Z);
+						NxZ = counts.get(assignment_x+"+"+assignment_Z);
+						NyZ = counts.get(assignment_y+"+"+assignment_Z);
+						NZ = counts.get(assignment_Z);
+					}
 					if(NxyZ > 0)
 						IxyZ += (NxyZ / NZ)*(Math.log(NxyZ)+Math.log(NZ)-Math.log(NxZ)-Math.log(NyZ));
 					for(int j=0;j<indices.size();++j) {
+						if(indices.get(j)==null) {
+							done = true;
+							break;
+						}
 						if(indices.get(j).hasNext()) {
 							cur_values.set(j, indices.get(j).next());
 							break;
@@ -596,10 +634,10 @@ public class ChenJob extends Configured implements Tool {
 	/** main function, executes the job on the cluster*/
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		conf.setInt("nvar", 179);
-		conf.setFloat("epsilon", (float) 0.05);
-		conf.set("datainput", "somewhere");
-		conf.set("countoutput", "somewhere");
+		conf.setInt("nvar", 70);
+		conf.setFloat("epsilon", (float) 0.01);
+		conf.set("datainput", "/user/mdejongh/input");
+		conf.set("countoutput", "/user/mdejongh/counts");
 		conf.set("countlist","mycounts.txt");
 		
 		int exitCode = ToolRunner.run(conf, new ChenJob(), args);
