@@ -45,6 +45,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 import smile.wide.utils.Pair;
 import smile.wide.utils.Pattern;
+import smile.wide.utils.Pattern.EdgeType;
 
 /** Job class to run PC's Independence tests on a hadoop cluster
  *  Sets up Hadoop configuration
@@ -58,7 +59,7 @@ public class FangJob extends Configured implements Tool {
 	 * waits for the job to be completed.*/
     ArrayList<ArrayList<Set<Integer> > > sepsets = new ArrayList<ArrayList<Set<Integer> > >();
 	Pattern pat = new Pattern();
-	double epsilon = 0;
+	int maxsetsize = 0;
 	Configuration conf = null;
 	int nvar = 0;
 	
@@ -71,26 +72,38 @@ public class FangJob extends Configured implements Tool {
 		//get pattern
 		pat.setSize(nvar);
 		//get epsilon
-		epsilon = conf.getFloat("epsilon", 0);
+		maxsetsize = conf.getInt("maxsetsize", 0);
 
-		//Fang's algorithm
-		
+		//Fang's algorithm (possibly, it's not completely clear from their paper)
+		for(int i=0;i<nvar;++i) {
+			Set<Integer> parents = new HashSet<Integer>();
+			double Pold = calculateScore(i);//Score for empty parent set
+			boolean OkToProceed = true;
+			while(OkToProceed && parents.size() < maxsetsize) {
+				Pair<Integer,Double> max = new Pair<Integer,Double>();
+				findBestCandidate(i,parents,max);//For each candidate calculate score, find max in reducers
+				if(max.getSecond() > Pold) {
+					Pold = max.getSecond();
+					parents.add(max.getFirst());
+					pat.setEdge((max.getFirst()), i, EdgeType.Directed);
+				}
+				else
+					OkToProceed = false;
+			}
+			
+		}
 		pat.Print();
 		return 0;
 	}
 	
-	class MIComparator implements Comparator<Pair<Pair<Integer,Integer>,Double>> {
-		/**compare function*/
-		@Override
-		public int compare(Pair<Pair<Integer,Integer>,Double> arg0, Pair<Pair<Integer,Integer>,Double> arg1) {
-			return arg0.getSecond().compareTo(arg1.getSecond());
-		}
-	}
-	
-	void calculateMRMI(ArrayList<Pair<Pair<Integer,Integer>,Double>> L) throws Exception {
+	double calculateScore(int v) throws Exception{
+		//This is a very simple MR job
+		//just get the counts for the variable.
+		//We could potentially calculate this for all variables at once
+		
 		//init job
 		Job job = new Job(conf);
-		job.setJobName("Distributed Mutual Information - Calculate Counts");
+		job.setJobName("K2 - Calculate Counts");
 		job.setJarByClass(FangJob.class);
 		job.setMapperClass(FangCounterMapper.class);
 		job.setMapOutputKeyClass(Text.class);
@@ -152,9 +165,10 @@ public class FangJob extends Configured implements Tool {
 		Calculate_MI:
 		//I(X,Y) = Sum_{x,y}P(x,y)log({P(x,y)}/{P(x)P(y)})
 		 */
+		double Ixy =0;
 		for(int x = 0; x<pat.getSize();++x) {
 			for(int y=x+1;y<pat.getSize();++y) {
-				double Ixy = 0;
+				Ixy = 0;
 				Iterator<String> itX = cardinalities.get(x).iterator();
 				while(itX.hasNext()) {
 					String assignment_x = "v"+x+"="+itX.next();
@@ -168,23 +182,31 @@ public class FangJob extends Configured implements Tool {
 							Ixy += (Nxy / N)*(Math.log(Nxy)+Math.log(N)-Math.log(Nx)-Math.log(Ny));
 					}
 				}
-				if(Ixy > epsilon)
-					L.add(new Pair<Pair<Integer,Integer>,Double>(new Pair<Integer,Integer>(x,y),Ixy));
 			}
 		}
-		//Sort L into decreasing order
-		Collections.sort(L, new MIComparator());
+		return Ixy;
 	}
-			
+	
+	void findBestCandidate(int x, Set<Integer> parents,Pair<Integer,Double> result) {
+/*
+		Let Z be a node in Pred(Xi) - PIi maximizing g(i, PIi U {Zi}) 
+		//effective try all of the available parent nodes (1 step at a time)
+		MR2: Calculate counts for candidates
+		
+		MR3: pick best structure
+ 		MAP: calculate score for candidate structures
+ 		RED: pick max candidate structure (i.e. z that maximizes score) 
+*/
+	}
+	
 	/** main function, executes the job on the cluster*/
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		conf.setInt("nvar", 179);
-		conf.setInt("maxsetsize", 8);
+		conf.setInt("nvar", 70);
+		conf.setInt("maxsetsize", 1);
 		conf.set("datainput", "somewhere");
 		conf.set("countoutput", "somewhere");
 		conf.set("countlist","mycounts.txt");
-		
 		int exitCode = ToolRunner.run(conf, new FangJob(), args);
 		System.exit(exitCode);
 	}
