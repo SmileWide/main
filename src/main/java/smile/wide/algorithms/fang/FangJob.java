@@ -219,34 +219,8 @@ public class FangJob extends Configured implements Tool {
 		String outputfile = conf.get("countlist");
 		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
 
-		Map<String,Integer> counts = new HashMap<String,Integer>();
-		List<HashSet<String>> cardinalities = new ArrayList<HashSet<String>>();
-		for(int i=0;i<nvar;++i)
-			cardinalities.add(new HashSet<String>());
-		
-		//retrieve results here
-		try {
-			File file = new File(outputfile);
-			FileReader fileReader = new FileReader(file);
-			BufferedReader bufferedReader = new BufferedReader(fileReader);
-			String line;
-			while ((line = bufferedReader.readLine()) != null) {
-				String[] contents = line.split("\t");
-				counts.put(contents[0], Integer.decode(contents[1]));
-				String[] assignments = contents[0].split("\\+");
-				for(int i=0;i<assignments.length;++i) {
-					String[] parts = assignments[i].split("=");
-					int index = Integer.decode(parts[0].substring(1));
-					cardinalities.get(index).add(parts[1]);
-				}
-			}
-			fileReader.close();
-			file.delete();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		//Calculate conditional counts
-		
+		//Maybe not download this file but copy it somewhere one the cluster?
+		//It has to go to the distributed cache for the next job
 /*		
 		MR3: pick best structure
  		MAP: calculate score for candidate structures
