@@ -21,15 +21,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.math3.util.ArithmeticUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -89,23 +87,25 @@ public class FangJob extends Configured implements Tool {
 				}
 				else
 					OkToProceed = false;
-			}
-			
+			}	
 		}
 		pat.Print();
 		return 0;
 	}
 	
-	double calculateScore(int v) throws Exception{
+	double calculateScore(int v) throws Exception {
 		//This is a very simple MR job
 		//just get the counts for the variable.
-		//We could potentially calculate this for all variables at once
+		//We could potentially calculate this for all variables at once (but that's not how it's described in paper)
+		
+		//we need to pass v
+		conf.setInt("VarX", v);
 		
 		//init job
 		Job job = new Job(conf);
 		job.setJobName("K2 - Calculate Counts");
 		job.setJarByClass(FangJob.class);
-		job.setMapperClass(FangCounterMapper.class);
+		job.setMapperClass(FangParentLessCounterMapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(VIntWritable.class);
 		job.setCombinerClass(FangCounterReducer.class);
@@ -156,43 +156,98 @@ public class FangJob extends Configured implements Tool {
 			e.printStackTrace();
 		}
 
+		/*
+		 * We need to calculate K2 here.
+		 * This is based on the no parents case.
+		 * Simplest case.
+		 *
+		 * general version
+		 * g(i,PIi) = PROD^{n}_{i=1}PROD^{Qi}_{j=1}{(Ri-1)!}/{(Nij+Ri-1)!}PROD^{Ri}_{k=1}Nijk!
+		 * 
+		 * Empty parent version (one node)
+		 * g(i,[]) = {(R-1)!}/{(N+R-1)!} * PROD^{R}_{k=1}Nk!
+		 */
+
 		//get total nr of records
 		double N = 0;
-		for(String s : cardinalities.get(0)) {
-			N+=counts.get("v0="+s);
+		double logNk = 0;
+		for(String s : cardinalities.get(v)) {
+			double count = counts.get("v"+v+"="+s);
+			N+=count;
+			logNk +=  ArithmeticUtils.factorialLog((int)count);
 		}
-		/*
-		Calculate_MI:
-		//I(X,Y) = Sum_{x,y}P(x,y)log({P(x,y)}/{P(x)P(y)})
-		 */
-		double Ixy =0;
-		for(int x = 0; x<pat.getSize();++x) {
-			for(int y=x+1;y<pat.getSize();++y) {
-				Ixy = 0;
-				Iterator<String> itX = cardinalities.get(x).iterator();
-				while(itX.hasNext()) {
-					String assignment_x = "v"+x+"="+itX.next();
-					Iterator<String> itY = cardinalities.get(y).iterator();
-					while(itY.hasNext()) {
-						String assignment_y = "v"+y+"="+itY.next();
-						double Nxy = counts.get(assignment_x+"+"+assignment_y);
-						double Nx = counts.get(assignment_x);
-						double Ny = counts.get(assignment_y);
-						if(Nxy > 0)
-							Ixy += (Nxy / N)*(Math.log(Nxy)+Math.log(N)-Math.log(Nx)-Math.log(Ny));
-					}
-				}
-			}
-		}
-		return Ixy;
+		//get node cardinality
+		double R = cardinalities.get(v).size();
+		//calculate score
+		double logSum = logNk + ArithmeticUtils.factorialLog((int)(R-1));;
+		logSum -= ArithmeticUtils.factorialLog((int)(N+R-1));
+		return logSum;
 	}
 	
-	void findBestCandidate(int x, Set<Integer> parents,Pair<Integer,Double> result) {
+	
+	void findBestCandidate(int x, Set<Integer> parents,Pair<Integer,Double> result) throws Exception {
 /*
 		Let Z be a node in Pred(Xi) - PIi maximizing g(i, PIi U {Zi}) 
 		//effective try all of the available parent nodes (1 step at a time)
 		MR2: Calculate counts for candidates
+*/
+		//init job
+		Job job = new Job(conf);
+		job.setJobName("K2 - Calculate Counts");
+		job.setJarByClass(FangJob.class);
+		job.setMapperClass(FangParentLessCounterMapper.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(VIntWritable.class);
+		job.setCombinerClass(FangCounterReducer.class);
+		job.setReducerClass(FangCounterReducer.class);
+		job.setInputFormatClass(TextInputFormat.class);
+		job.setNumReduceTasks(1);
+
+		//Set input and output paths
+		Path inputPath = new Path(conf.get("datainput"));
+		FileInputFormat.setInputPaths(job, inputPath);
+		Path outputPath = new Path(conf.get("countoutput"));
+		FileOutputFormat.setOutputPath(job, outputPath);
+		outputPath.getFileSystem(conf).delete(outputPath, true);
+
+		//Run the job
+		job.waitForCompletion(true);
 		
+		//download result file
+		FileSystem dfs = FileSystem.get(conf);
+		outputPath.suffix("/part-r-00000");
+		String outputfile = conf.get("countlist");
+		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
+
+		Map<String,Integer> counts = new HashMap<String,Integer>();
+		List<HashSet<String>> cardinalities = new ArrayList<HashSet<String>>();
+		for(int i=0;i<nvar;++i)
+			cardinalities.add(new HashSet<String>());
+		
+		//retrieve results here
+		try {
+			File file = new File(outputfile);
+			FileReader fileReader = new FileReader(file);
+			BufferedReader bufferedReader = new BufferedReader(fileReader);
+			String line;
+			while ((line = bufferedReader.readLine()) != null) {
+				String[] contents = line.split("\t");
+				counts.put(contents[0], Integer.decode(contents[1]));
+				String[] assignments = contents[0].split("\\+");
+				for(int i=0;i<assignments.length;++i) {
+					String[] parts = assignments[i].split("=");
+					int index = Integer.decode(parts[0].substring(1));
+					cardinalities.get(index).add(parts[1]);
+				}
+			}
+			fileReader.close();
+			file.delete();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		//Calculate conditional counts
+		
+/*		
 		MR3: pick best structure
  		MAP: calculate score for candidate structures
  		RED: pick max candidate structure (i.e. z that maximizes score) 
