@@ -245,14 +245,13 @@ public class FangJob extends Configured implements Tool {
  		MAP: calculate score for candidate structures
  		RED: pick max candidate structure (i.e. z that maximizes score)
 */
-		//set pattern
-		conf.set("pattern",pat.toString());
-
+		//node and parents are already set an can be reused
+		
 		//init job
 		job = new Job(conf);
-		job.setJobName("K2 - Calculate Counts");
+		job.setJobName("K2 - Score Candidate Parent Additions for Node " + x);
 		job.setJarByClass(FangJob.class);
-		job.setMapperClass(FangParentLessCounterMapper.class);
+		job.setMapperClass(FangStructureScoreMapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(VIntWritable.class);
 		job.setCombinerClass(FangCounterReducer.class);
@@ -262,10 +261,11 @@ public class FangJob extends Configured implements Tool {
 
 		//Set input and output paths (we need to do something different here)
 		//input path should be all possible structures (custom file)
-		//output path should be best change (most compact, number and score (increase?))
+		
 		inputPath = new Path(conf.get("datainput"));
 		FileInputFormat.setInputPaths(job, inputPath);
-		outputPath = new Path(conf.get("countoutput"));
+		//output path should be best change (most compact, number and score (increase?))
+		outputPath = new Path(conf.get("structureoutput"));
 		FileOutputFormat.setOutputPath(job, outputPath);
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 
@@ -277,6 +277,8 @@ public class FangJob extends Configured implements Tool {
 		outputPath.suffix("/part-r-00000");
 		String outputfile = conf.get("countlist");
 		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
+		
+		//here read file, collect best modification and update network.
 	}
 	
 	/** main function, executes the job on the cluster*/
@@ -286,6 +288,7 @@ public class FangJob extends Configured implements Tool {
 		conf.setInt("maxsetsize", 1);
 		conf.set("datainput", "somewhere");
 		conf.set("countoutput", "somewhere");
+		conf.set("structureoutput","somewhere");
 		conf.set("countlist","mycounts.txt");
 		int exitCode = ToolRunner.run(conf, new FangJob(), args);
 		System.exit(exitCode);
