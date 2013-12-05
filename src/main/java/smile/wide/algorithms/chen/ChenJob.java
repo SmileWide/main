@@ -507,7 +507,7 @@ public class ChenJob extends Configured implements Tool {
 			else
 				ssZ += ","+i;
 		}
-		conf.set("Z", ssZ);
+		conf.set("parents", ssZ);
 		
 		//init job
 		Job job = new Job(conf);

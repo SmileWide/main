@@ -29,46 +29,59 @@ import org.apache.hadoop.mapreduce.*;
  * @author m.a.dejongh@gmail.com
  *
  */
-public class FangCounterMapper extends Mapper<LongWritable, Text, Text, VIntWritable> {
+public class FangStructureScoreMapper extends Mapper<LongWritable, Text, Text, VIntWritable> {
 	String record = new String();
-	int x = 0;
-	int nvar = 0;
 	VIntWritable one = new VIntWritable(1);
-	String par = "";
-	Set<Integer> parents = new HashSet<Integer>();
-	String assignment = "";
+	int x = 0;
+	int y = 0;
+	String ssZ = "";
+	Set<Integer> Z = new HashSet<Integer>();
+	String value1 = new String();
+	String value2 = new String();
+	String value3 = new String();
 	/** Initializes class parameters*/
 	@Override
 	protected void setup(Context context) {
 		Configuration conf = context.getConfiguration();
 		//set some constants here
-		//set total nr variables
-		nvar = conf.getInt("nvar",0);
-		//set variable
-		x = conf.getInt("VarX",0);
-		//set current parent set
-		par = conf.get("parents","");
+		x=conf.getInt("Vx", -1);
+		y=conf.getInt("Vy", -1);
+		ssZ = conf.get("Z","");
 	}
-	
 	/**Mapper
 	 */
 	@Override
-	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException  {
+	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 		record = value.toString();
 		String[] values = record.split(",|\t| ");
-		
-		//create joint assignment of x and parents
-		assignment = "v"+x+"="+values[x];
-		for(Integer y : parents) {
-			assignment += "+v"+y+"="+values[y];
-		}
-		context.write(new Text(assignment),one);
-		//we need to iterate over all non-parents
-		for(int y=0;y<nvar;++y) {
-			if( y!=x && !parents.contains(y) ) {
-				//create joint assignment of x,parents,y
-				context.write(new Text(assignment + "+v"+y+"="+values[y]),one);
+		value1="v"+x+"="+values[x];
+		value2="v"+y+"="+values[y];
+		boolean first=true;
+		value3="";
+		if(ssZ != "") {
+			String[] sZ = ssZ.split(",");
+			for(int i=0;i<sZ.length;++i)
+				Z.add(Integer.decode(sZ[i]));
+			for(Integer z : Z) {
+				if(!first) {
+					value3+="+v"+z+"="+values[z];
+				}
+				else {
+					first = false;
+					value3="v"+z+"="+values[z];
+				}
 			}
+		}
+		if(value3 != "") {
+			context.write(new Text(value1+"+"+value3), one);
+			context.write(new Text(value2+"+"+value3), one);
+			context.write(new Text(value1+"+"+value2+"+"+value3), one);
+			context.write(new Text(value3), one);
+		}
+		else {
+			context.write(new Text(value1), one);
+			context.write(new Text(value2), one);
+			context.write(new Text(value1+"+"+value2), one);
 		}
 	}
 }

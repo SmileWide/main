@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +31,7 @@ import java.util.Set;
 import org.apache.commons.math3.util.ArithmeticUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -191,11 +193,27 @@ public class FangJob extends Configured implements Tool {
 		//effective try all of the available parent nodes (1 step at a time)
 		MR2: Calculate counts for candidates
 */
+		conf.setInt("nvar",pat.getSize());
+		//set node
+		conf.setInt("VarX", x);
+		//set parents
+		String par = "";
+		boolean first = true;
+		for(Integer i : parents) {
+			if(first) {
+				first=false;
+				par = i.toString();
+			}
+			else
+				par += ","+i;
+		}
+		conf.set("parents", par);
+		
 		//init job
 		Job job = new Job(conf);
 		job.setJobName("K2 - Calculate Counts");
 		job.setJarByClass(FangJob.class);
-		job.setMapperClass(FangParentLessCounterMapper.class);
+		job.setMapperClass(FangCounterMapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(VIntWritable.class);
 		job.setCombinerClass(FangCounterReducer.class);
@@ -213,19 +231,52 @@ public class FangJob extends Configured implements Tool {
 		//Run the job
 		job.waitForCompletion(true);
 		
+		//download result file (not necessary?)
+//		FileSystem dfs = FileSystem.get(conf);
+//		String outputfile = conf.get("countlist");
+//		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
+
+		//distributed cache initialization
+		DistributedCache.createSymlink(conf);
+		//add the result file to the Distributed cache
+		DistributedCache.addCacheFile(new URI(outputPath + "/part-r-00000#part-r-00000"), conf);		
+/*		
+		MR3: pick best structure
+ 		MAP: calculate score for candidate structures
+ 		RED: pick max candidate structure (i.e. z that maximizes score)
+*/
+		//set pattern
+		conf.set("pattern",pat.toString());
+
+		//init job
+		job = new Job(conf);
+		job.setJobName("K2 - Calculate Counts");
+		job.setJarByClass(FangJob.class);
+		job.setMapperClass(FangParentLessCounterMapper.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(VIntWritable.class);
+		job.setCombinerClass(FangCounterReducer.class);
+		job.setReducerClass(FangCounterReducer.class);
+		job.setInputFormatClass(TextInputFormat.class);
+		job.setNumReduceTasks(1);
+
+		//Set input and output paths (we need to do something different here)
+		//input path should be all possible structures (custom file)
+		//output path should be best change (most compact, number and score (increase?))
+		inputPath = new Path(conf.get("datainput"));
+		FileInputFormat.setInputPaths(job, inputPath);
+		outputPath = new Path(conf.get("countoutput"));
+		FileOutputFormat.setOutputPath(job, outputPath);
+		outputPath.getFileSystem(conf).delete(outputPath, true);
+
+		//Run the job
+		job.waitForCompletion(true);
+		
 		//download result file
 		FileSystem dfs = FileSystem.get(conf);
 		outputPath.suffix("/part-r-00000");
 		String outputfile = conf.get("countlist");
 		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
-
-		//Maybe not download this file but copy it somewhere one the cluster?
-		//It has to go to the distributed cache for the next job
-/*		
-		MR3: pick best structure
- 		MAP: calculate score for candidate structures
- 		RED: pick max candidate structure (i.e. z that maximizes score) 
-*/
 	}
 	
 	/** main function, executes the job on the cluster*/
