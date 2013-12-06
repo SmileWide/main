@@ -21,17 +21,23 @@ import java.io.IOException;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
 
+import smile.wide.utils.PairDoubleWritable;
+
 /**Reducer class
  * @author m.a.dejongh@gmail.com
  */
-public class FangStructureScoreReducer extends Reducer<Text, VIntWritable, Text, VIntWritable> {
+public class FangStructureScoreReducer extends Reducer<VIntWritable, PairDoubleWritable, VIntWritable, PairDoubleWritable> {
 	@Override
-	/** Reduce function, for now should generate counts*/
-	public void reduce(Text key, Iterable<VIntWritable> values, Context context) throws IOException, InterruptedException {
-		int total = 0;
-		for (VIntWritable p: values) {
-			total += p.get();
+	/** Reduce function, finds best structure*/
+	public void reduce(VIntWritable key, Iterable<PairDoubleWritable> values, Context context) throws IOException, InterruptedException {
+		double bestcandidate = 0;//needs to be very small (- infinity if possible)
+		double maxscore = Double.NEGATIVE_INFINITY;
+		for (PairDoubleWritable p: values) {
+			if(maxscore < p.getRight()) {
+				 maxscore = p.getRight();
+				 bestcandidate = p.getLeft();
+			}
 		}
-		context.write(key, new VIntWritable(total));
+		context.write(key, new PairDoubleWritable(bestcandidate,maxscore));
 	}
 }

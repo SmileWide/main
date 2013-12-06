@@ -44,6 +44,7 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 import smile.wide.utils.Pair;
+import smile.wide.utils.PairDoubleWritable;
 import smile.wide.utils.Pattern;
 import smile.wide.utils.Pattern.EdgeType;
 
@@ -105,7 +106,7 @@ public class FangJob extends Configured implements Tool {
 		
 		//init job
 		Job job = new Job(conf);
-		job.setJobName("K2 - Calculate Counts");
+		job.setJobName("K2 - Calculate Counts for node " + v);
 		job.setJarByClass(FangJob.class);
 		job.setMapperClass(FangParentLessCounterMapper.class);
 		job.setMapOutputKeyClass(Text.class);
@@ -181,7 +182,7 @@ public class FangJob extends Configured implements Tool {
 		//get node cardinality
 		double R = cardinalities.get(v).size();
 		//calculate score
-		double logSum = logNk + ArithmeticUtils.factorialLog((int)(R-1));;
+		double logSum = logNk + ArithmeticUtils.factorialLog((int)(R-1));
 		logSum -= ArithmeticUtils.factorialLog((int)(N+R-1));
 		return logSum;
 	}
@@ -211,7 +212,7 @@ public class FangJob extends Configured implements Tool {
 		
 		//init job
 		Job job = new Job(conf);
-		job.setJobName("K2 - Calculate Counts");
+		job.setJobName("K2 - Calculate Counts node "+x+" parents "+parents+" and candidates");
 		job.setJarByClass(FangJob.class);
 		job.setMapperClass(FangCounterMapper.class);
 		job.setMapOutputKeyClass(Text.class);
@@ -246,17 +247,18 @@ public class FangJob extends Configured implements Tool {
  		RED: pick max candidate structure (i.e. z that maximizes score)
 */
 		//node and parents are already set an can be reused
+		conf.set("countfile", "part-r-00000");
 		
 		//init job
 		job = new Job(conf);
 		job.setJobName("K2 - Score Candidate Parent Additions for Node " + x);
 		job.setJarByClass(FangJob.class);
 		job.setMapperClass(FangStructureScoreMapper.class);
-		job.setMapOutputKeyClass(Text.class);
-		job.setMapOutputValueClass(VIntWritable.class);
-		job.setCombinerClass(FangCounterReducer.class);
-		job.setReducerClass(FangCounterReducer.class);
-		job.setInputFormatClass(TextInputFormat.class);
+		job.setMapOutputKeyClass(VIntWritable.class);
+		job.setMapOutputValueClass(PairDoubleWritable.class);
+		job.setCombinerClass(FangStructureScoreReducer.class);
+		job.setReducerClass(FangStructureScoreReducer.class);
+		job.setInputFormatClass(StructureInputFormat.class);
 		job.setNumReduceTasks(1);
 
 		//Set input and output paths (we need to do something different here)
@@ -275,10 +277,11 @@ public class FangJob extends Configured implements Tool {
 		//download result file
 		FileSystem dfs = FileSystem.get(conf);
 		outputPath.suffix("/part-r-00000");
-		String outputfile = conf.get("countlist");
-		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
+		String structurefile = conf.get("beststructure");
+		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+structurefile));
 		
 		//here read file, collect best modification and update network.
+		System.exit(0);//Test??
 	}
 	
 	/** main function, executes the job on the cluster*/
@@ -286,10 +289,11 @@ public class FangJob extends Configured implements Tool {
 		Configuration conf = new Configuration();
 		conf.setInt("nvar", 70);
 		conf.setInt("maxsetsize", 1);
-		conf.set("datainput", "somewhere");
-		conf.set("countoutput", "somewhere");
-		conf.set("structureoutput","somewhere");
+		conf.set("datainput", "/user/mdejongh/input");
+		conf.set("countoutput", "/user/mdejongh/counts");
+		conf.set("structureoutput","/user/mdejongh/beststructure");
 		conf.set("countlist","mycounts.txt");
+		conf.set("beststructure","beststructure.txt");
 		int exitCode = ToolRunner.run(conf, new FangJob(), args);
 		System.exit(exitCode);
 	}

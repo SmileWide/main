@@ -48,6 +48,11 @@ public class FangCounterMapper extends Mapper<LongWritable, Text, Text, VIntWrit
 		x = conf.getInt("VarX",0);
 		//set current parent set
 		par = conf.get("parents","");
+		if(par != "") {
+			String[] sZ = par.split(",");
+			for(int i=0;i<sZ.length;++i)
+				parents.add(Integer.decode(sZ[i]));
+		}
 	}
 	
 	/**Mapper
@@ -57,17 +62,17 @@ public class FangCounterMapper extends Mapper<LongWritable, Text, Text, VIntWrit
 		record = value.toString();
 		String[] values = record.split(",|\t| ");
 		
-		//create joint assignment of x and parents
-		assignment = "v"+x+"="+values[x];
-		for(Integer y : parents) {
-			assignment += "+v"+y+"="+values[y];
-		}
-		context.write(new Text(assignment),one);
 		//we need to iterate over all non-parents
 		for(int y=0;y<nvar;++y) {
 			if( y!=x && !parents.contains(y) ) {
-				//create joint assignment of x,parents,y
-				context.write(new Text(assignment + "+v"+y+"="+values[y]),one);
+				//create joint assignment of candidates y and current parents
+				assignment = "v"+y+"="+values[y];
+				for(Integer z : parents) {
+					assignment += "+v"+z+"="+values[z];
+				}
+				context.write(new Text(assignment),one);
+				//create joint assignment of y,parents,x
+				context.write(new Text(assignment + "+v"+x+"="+values[x]),one);
 			}
 		}
 	}
