@@ -66,19 +66,22 @@ public class FangJob extends Configured implements Tool {
 	
 	@Override
 	public int run(String[] params) throws Exception {
+		//TODO add in variable ordering
+		//get configuration
 		conf = super.getConf();
-
 		//get number of variables
 		nvar = conf.getInt("nvar", 0);
 		//get pattern
 		pat.setSize(nvar);
-		//get epsilon
+		//get maxsetsize
 		maxsetsize = conf.getInt("maxsetsize", 0);
 
 		//Fang's algorithm (possibly, it's not completely clear from their paper)
 		for(int i=0;i<nvar;++i) {
+			System.out.println("Checking node "+i);
 			Set<Integer> parents = new HashSet<Integer>();
 			double Pold = calculateScore(i);//Score for empty parent set
+			System.out.println(" Parentless score: "+Pold);
 			boolean OkToProceed = true;
 			while(OkToProceed && parents.size() < maxsetsize) {
 				Pair<Integer,Double> max = new Pair<Integer,Double>();
@@ -87,6 +90,8 @@ public class FangJob extends Configured implements Tool {
 					Pold = max.getSecond();
 					parents.add(max.getFirst());
 					pat.setEdge((max.getFirst()), i, EdgeType.Directed);
+					
+					System.out.println(max);
 				}
 				else
 					OkToProceed = false;
@@ -100,6 +105,8 @@ public class FangJob extends Configured implements Tool {
 		//This is a very simple MR job
 		//just get the counts for the variable.
 		//We could potentially calculate this for all variables at once (but that's not how it's described in paper)
+		
+		System.out.println("Calculating score for "+v);
 		
 		//we need to pass v
 		conf.setInt("VarX", v);
@@ -132,6 +139,7 @@ public class FangJob extends Configured implements Tool {
 		String outputfile = conf.get("countlist");
 		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
 
+		//Data structures for the counts in the file and node cardinalities
 		Map<String,Integer> counts = new HashMap<String,Integer>();
 		List<HashSet<String>> cardinalities = new ArrayList<HashSet<String>>();
 		for(int i=0;i<nvar;++i)
@@ -159,18 +167,6 @@ public class FangJob extends Configured implements Tool {
 			e.printStackTrace();
 		}
 
-		/*
-		 * We need to calculate K2 here.
-		 * This is based on the no parents case.
-		 * Simplest case.
-		 *
-		 * general version
-		 * g(i,PIi) = PROD^{n}_{i=1}PROD^{Qi}_{j=1}{(Ri-1)!}/{(Nij+Ri-1)!}PROD^{Ri}_{k=1}Nijk!
-		 * 
-		 * Empty parent version (one node)
-		 * g(i,[]) = {(R-1)!}/{(N+R-1)!} * PROD^{R}_{k=1}Nk!
-		 */
-
 		//get total nr of records
 		double N = 0;
 		double logNk = 0;
@@ -179,24 +175,25 @@ public class FangJob extends Configured implements Tool {
 			N+=count;
 			logNk +=  ArithmeticUtils.factorialLog((int)count);
 		}
+
 		//get node cardinality
 		double R = cardinalities.get(v).size();
-		//calculate score
+
+		//calculate K2 score
 		double logSum = logNk + ArithmeticUtils.factorialLog((int)(R-1));
 		logSum -= ArithmeticUtils.factorialLog((int)(N+R-1));
+
+		//return result
 		return logSum;
 	}
 	
 	
 	void findBestCandidate(int x, Set<Integer> parents,Pair<Integer,Double> result) throws Exception {
-/*
-		Let Z be a node in Pred(Xi) - PIi maximizing g(i, PIi U {Zi}) 
-		//effective try all of the available parent nodes (1 step at a time)
-		MR2: Calculate counts for candidates
-*/
-		conf.setInt("nvar",pat.getSize());
+		//MR2: Calculate counts for candidates
+
 		//set node
 		conf.setInt("VarX", x);
+		
 		//set parents
 		String par = "";
 		boolean first = true;
@@ -232,22 +229,21 @@ public class FangJob extends Configured implements Tool {
 		//Run the job
 		job.waitForCompletion(true);
 		
-		//download result file (not necessary?)
-//		FileSystem dfs = FileSystem.get(conf);
-//		String outputfile = conf.get("countlist");
-//		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
-
-		//distributed cache initialization
+		//check if file was created previously and delete it if so
+		FileSystem dfs = FileSystem.get(conf); 
+		Path source = new Path(outputPath+"/part-r-00000");
+		Path sink = new Path(outputPath+"/../thecountfile");
+		if (dfs.exists(sink))
+			dfs.delete(sink);
+		outputPath.getFileSystem(conf).rename(source, sink);
+		
+		//add the result file to the Distributed cache and create symbolic links
+		DistributedCache.addCacheFile(new URI(outputPath + "/../thecountfile#thecountfile"), conf);		
 		DistributedCache.createSymlink(conf);
-		//add the result file to the Distributed cache
-		DistributedCache.addCacheFile(new URI(outputPath + "/part-r-00000#part-r-00000"), conf);		
-/*		
-		MR3: pick best structure
- 		MAP: calculate score for candidate structures
- 		RED: pick max candidate structure (i.e. z that maximizes score)
-*/
+
+		//MR3: pick best structure
 		//node and parents are already set an can be reused
-		conf.set("countfile", "part-r-00000");
+		conf.set("countfile", "thecountfile");
 		
 		//init job
 		job = new Job(conf);
@@ -261,27 +257,39 @@ public class FangJob extends Configured implements Tool {
 		job.setInputFormatClass(StructureInputFormat.class);
 		job.setNumReduceTasks(1);
 
-		//Set input and output paths (we need to do something different here)
-		//input path should be all possible structures (custom file)
-		
-		inputPath = new Path(conf.get("datainput"));
-		FileInputFormat.setInputPaths(job, inputPath);
 		//output path should be best change (most compact, number and score (increase?))
 		outputPath = new Path(conf.get("structureoutput"));
 		FileOutputFormat.setOutputPath(job, outputPath);
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 
 		//Run the job
-		job.waitForCompletion(true);
+		job.waitForCompletion(true);	
 		
 		//download result file
-		FileSystem dfs = FileSystem.get(conf);
 		outputPath.suffix("/part-r-00000");
 		String structurefile = conf.get("beststructure");
 		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+structurefile));
 		
 		//here read file, collect best modification and update network.
-		System.exit(0);//Test??
+		int bestcandidate = -1;
+		double bestscore = 1.0;
+		try {
+			File file = new File(structurefile);
+			FileReader fileReader = new FileReader(file);
+			BufferedReader bufferedReader = new BufferedReader(fileReader);
+			String line;
+			if ((line = bufferedReader.readLine()) != null) {
+				String[] contents = line.split("\t");
+				bestcandidate = (int) Double.parseDouble(contents[1]);
+				bestscore = Double.parseDouble(contents[2]);
+			}
+			fileReader.close();
+			file.delete();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		result.setFirst(bestcandidate);
+		result.setSecond(bestscore);
 	}
 	
 	/** main function, executes the job on the cluster*/

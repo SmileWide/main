@@ -55,11 +55,19 @@ public class FangStructureScoreMapper extends Mapper<LongWritable, Void, VIntWri
 	/** Initializes class parameters*/
 	@Override
 	protected void setup(Context context) {
+		//get configuration
 		Configuration conf = context.getConfiguration();
-		//set some constants here
+
+		//get variable to examine
 		x=conf.getInt("VarX", -1);
+		
+		//get total number of variables
 		nvar = conf.getInt("nvar",0);
+		
+		//get name of count file
 		countfile = conf.get("countfile");
+		
+		//get current parent set
 		par = conf.get("parents","");
 		if(par != ""){
 			String[] sZ = par.split(",");
@@ -67,17 +75,18 @@ public class FangStructureScoreMapper extends Mapper<LongWritable, Void, VIntWri
 				parents.add(Integer.decode(sZ[i]));
 		}
 		parsize = parents.size()+1;
-		//here read file and put contents in a useful datastructure
-		//retrieve results here
+
+		//init count data structures
 		parcounts = new ArrayList<ArrayList<Integer>>();
 		counts = new ArrayList<ArrayList<Integer>>();
 		cardinalities = new ArrayList<HashSet<String>>();
-
 		for(int i=0;i<nvar;++i) {
 			cardinalities.add(new HashSet<String>());
 			parcounts.add(new ArrayList<Integer>());
 			counts.add(new ArrayList<Integer>());
 		}
+		
+		//Read count file
 		try {
 			File file = new File(countfile);
 			FileReader fileReader = new FileReader(file);
@@ -103,20 +112,21 @@ public class FangStructureScoreMapper extends Mapper<LongWritable, Void, VIntWri
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		//set r constant for variable
 		r = cardinalities.get(x).size();
 	}
 	/**Mapper
 	 */
 	@Override
 	protected void map(LongWritable key, Void value, Context context) throws IOException, InterruptedException {
+		//get current candidate
 		int candidate = (int) key.get();
+		
+		//check if candidate isnt var or its parents
 		if(candidate != x && !parents.contains(candidate)) {
+			//calculate K2 score
 			double logscore = 0;
-			//format is y+parents+x
-			/*
-			 * We need to calculate K2 here.
-			 * g(PI) = PROD^{q}_{j=1}{(r-1)!}/{(Nj+r-1)!} PROD^{r}_{k=1}Njk!
-			 */
 			double faclogr = ArithmeticUtils.factorialLog(r-1);
 			for(Integer i: parcounts.get(candidate))
 				logscore +=  faclogr - ArithmeticUtils.factorialLog(i+r-1);

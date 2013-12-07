@@ -30,7 +30,7 @@ public class FangStructureScoreReducer extends Reducer<VIntWritable, PairDoubleW
 	@Override
 	/** Reduce function, finds best structure*/
 	public void reduce(VIntWritable key, Iterable<PairDoubleWritable> values, Context context) throws IOException, InterruptedException {
-		double bestcandidate = 0;//needs to be very small (- infinity if possible)
+		double bestcandidate = 0;
 		double maxscore = Double.NEGATIVE_INFINITY;
 		for (PairDoubleWritable p: values) {
 			if(maxscore < p.getRight()) {

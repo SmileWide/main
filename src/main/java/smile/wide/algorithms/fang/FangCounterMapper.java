@@ -27,7 +27,6 @@ import org.apache.hadoop.mapreduce.*;
 /**
  * Mapper
  * @author m.a.dejongh@gmail.com
- *
  */
 public class FangCounterMapper extends Mapper<LongWritable, Text, Text, VIntWritable> {
 	String record = new String();
@@ -41,7 +40,6 @@ public class FangCounterMapper extends Mapper<LongWritable, Text, Text, VIntWrit
 	@Override
 	protected void setup(Context context) {
 		Configuration conf = context.getConfiguration();
-		//set some constants here
 		//set total nr variables
 		nvar = conf.getInt("nvar",0);
 		//set variable
@@ -55,14 +53,13 @@ public class FangCounterMapper extends Mapper<LongWritable, Text, Text, VIntWrit
 		}
 	}
 	
-	/**Mapper
-	 */
+	/**Mapper*/
 	@Override
 	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException  {
 		record = value.toString();
 		String[] values = record.split(",|\t| ");
-		
 		//we need to iterate over all non-parents
+		//TODO candiadate have to come before variable x in the ordering 
 		for(int y=0;y<nvar;++y) {
 			if( y!=x && !parents.contains(y) ) {
 				//create joint assignment of candidates y and current parents

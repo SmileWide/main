@@ -33,8 +33,9 @@ public class FangParentLessCounterMapper extends Mapper<LongWritable, Text, Text
 	/** Initializes class parameters*/
 	@Override
 	protected void setup(Context context) {
+		//get configuration
 		Configuration conf = context.getConfiguration();
-		//set some constants here
+		//get variable under investigation
 		x = conf.getInt("VarX", 0);
 	}
 	

@@ -20,9 +20,9 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 public class StructureInputFormat extends InputFormat<LongWritable, Void> {
 	@Override
 	public List<InputSplit> getSplits(JobContext context) throws IOException, InterruptedException {
-		Configuration conf = context.getConfiguration(); 
+		//Configuration conf = context.getConfiguration(); 
 
-		int count = conf.getInt("nvar", 0);
+		int count = 70;//conf.getInt("nvar", 0);//TODO We need some way to get info here, but newer compiled/older run is a problem.
 		ArrayList<InputSplit> out = new ArrayList<InputSplit>(count);
 		for (int i = 0; i < count; i ++) {
 			out.add(new StructureSplit(i));
