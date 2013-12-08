@@ -17,6 +17,7 @@
 package smile.wide.algorithms.fang;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,7 +35,9 @@ public class FangCounterMapper extends Mapper<LongWritable, Text, Text, VIntWrit
 	int nvar = 0;
 	VIntWritable one = new VIntWritable(1);
 	String par = "";
+	String ord = "";
 	Set<Integer> parents = new HashSet<Integer>();
+	ArrayList<Integer> order = new ArrayList<Integer>();
 	String assignment = "";
 	/** Initializes class parameters*/
 	@Override
@@ -51,6 +54,11 @@ public class FangCounterMapper extends Mapper<LongWritable, Text, Text, VIntWrit
 			for(int i=0;i<sZ.length;++i)
 				parents.add(Integer.decode(sZ[i]));
 		}
+		//set order
+		ord = conf.get("order","");
+			String[] sZ = ord.split(",");
+			for(int i=0;i<sZ.length;++i)
+				order.add(Integer.decode(sZ[i]));
 	}
 	
 	/**Mapper*/
@@ -58,10 +66,10 @@ public class FangCounterMapper extends Mapper<LongWritable, Text, Text, VIntWrit
 	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException  {
 		record = value.toString();
 		String[] values = record.split(",|\t| ");
-		//we need to iterate over all non-parents
-		//TODO candiadate have to come before variable x in the ordering 
+		//we need to iterate over all non-parents (only ones that occur before x in the order)
+		int idx_x = order.indexOf(x);
 		for(int y=0;y<nvar;++y) {
-			if( y!=x && !parents.contains(y) ) {
+			if( y!=x && !parents.contains(y) && order.indexOf(y) < idx_x) {
 				//create joint assignment of candidates y and current parents
 				assignment = "v"+y+"="+values[y];
 				for(Integer z : parents) {

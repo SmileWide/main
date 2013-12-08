@@ -21,10 +21,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.math3.util.ArithmeticUtils;
@@ -45,8 +43,10 @@ public class FangStructureScoreMapper extends Mapper<LongWritable, Void, VIntWri
 	int parsize = 0;
 	int r = 0;
 	String par = "";
+	String ord = "";
 	String countfile = "";
 	Set<Integer> parents = new HashSet<Integer>();
+	ArrayList<Integer> order = new ArrayList<Integer>();
 
 	List<ArrayList<Integer>> parcounts = null;
 	List<ArrayList<Integer>> counts = null;
@@ -85,6 +85,11 @@ public class FangStructureScoreMapper extends Mapper<LongWritable, Void, VIntWri
 			parcounts.add(new ArrayList<Integer>());
 			counts.add(new ArrayList<Integer>());
 		}
+		//set order
+		ord = conf.get("order","");
+			String[] sZ = ord.split(",");
+			for(int i=0;i<sZ.length;++i)
+				order.add(Integer.decode(sZ[i]));
 		
 		//Read count file
 		try {
@@ -124,7 +129,7 @@ public class FangStructureScoreMapper extends Mapper<LongWritable, Void, VIntWri
 		int candidate = (int) key.get();
 		
 		//check if candidate isnt var or its parents
-		if(candidate != x && !parents.contains(candidate)) {
+		if(candidate != x && !parents.contains(candidate) && order.indexOf(candidate) < order.indexOf(x)) {
 			//calculate K2 score
 			double logscore = 0;
 			double faclogr = ArithmeticUtils.factorialLog(r-1);

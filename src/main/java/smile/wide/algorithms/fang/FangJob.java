@@ -22,10 +22,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.math3.util.ArithmeticUtils;
@@ -63,10 +65,14 @@ public class FangJob extends Configured implements Tool {
 	int maxsetsize = 0;
 	Configuration conf = null;
 	int nvar = 0;
+	ArrayList<Integer> order = null;
+	
+	public void setOrder(ArrayList<Integer> o) {
+		order = o;
+	}
 	
 	@Override
 	public int run(String[] params) throws Exception {
-		//TODO add in variable ordering
 		//get configuration
 		conf = super.getConf();
 		//get number of variables
@@ -75,8 +81,20 @@ public class FangJob extends Configured implements Tool {
 		pat.setSize(nvar);
 		//get maxsetsize
 		maxsetsize = conf.getInt("maxsetsize", 0);
-
-		//Fang's algorithm (possibly, it's not completely clear from their paper)
+		//set order
+		String ord = "";
+		boolean first = true;
+		for(Integer i : order) {
+			if(first) {
+				first=false;
+				ord = i.toString();
+			}
+			else
+				ord += ","+i;
+		}
+		conf.set("order", ord);
+		
+		//Fang's algorithm (sort of, it's not completely clear from their paper)
 		for(int i=0;i<nvar;++i) {
 			System.out.println("Checking node "+i);
 			Set<Integer> parents = new HashSet<Integer>();
@@ -85,13 +103,13 @@ public class FangJob extends Configured implements Tool {
 			boolean OkToProceed = true;
 			while(OkToProceed && parents.size() < maxsetsize) {
 				Pair<Integer,Double> max = new Pair<Integer,Double>();
-				findBestCandidate(i,parents,max);//For each candidate calculate score, find max in reducers
+				//For each candidate calculate score, find max in reducers
+				findBestCandidate(i,parents,max);
 				if(max.getSecond() > Pold) {
 					Pold = max.getSecond();
 					parents.add(max.getFirst());
-					pat.setEdge((max.getFirst()), i, EdgeType.Directed);
-					
 					System.out.println(max);
+					pat.setEdge((max.getFirst()), i, EdgeType.Directed);
 				}
 				else
 					OkToProceed = false;
@@ -206,7 +224,7 @@ public class FangJob extends Configured implements Tool {
 				par += ","+i;
 		}
 		conf.set("parents", par);
-		
+
 		//init job
 		Job job = new Job(conf);
 		job.setJobName("K2 - Calculate Counts node "+x+" parents "+parents+" and candidates");
@@ -272,7 +290,7 @@ public class FangJob extends Configured implements Tool {
 		
 		//here read file, collect best modification and update network.
 		int bestcandidate = -1;
-		double bestscore = 1.0;
+		double bestscore = Double.NEGATIVE_INFINITY;
 		try {
 			File file = new File(structurefile);
 			FileReader fileReader = new FileReader(file);
@@ -294,15 +312,28 @@ public class FangJob extends Configured implements Tool {
 	
 	/** main function, executes the job on the cluster*/
 	public static void main(String[] args) throws Exception {
+		//define node ordering here.
+		int nvar = 70;
+		
 		Configuration conf = new Configuration();
-		conf.setInt("nvar", 70);
+		conf.setInt("nvar", nvar);
 		conf.setInt("maxsetsize", 1);
 		conf.set("datainput", "/user/mdejongh/input");
 		conf.set("countoutput", "/user/mdejongh/counts");
 		conf.set("structureoutput","/user/mdejongh/beststructure");
 		conf.set("countlist","mycounts.txt");
 		conf.set("beststructure","beststructure.txt");
-		int exitCode = ToolRunner.run(conf, new FangJob(), args);
+		
+		ArrayList<Integer> order = new ArrayList<Integer>();
+		for(int x=0;x<nvar;++x)
+			order.add(x);
+
+		long seed = 1982;
+		Collections.shuffle(order, new Random(seed));
+		
+		FangJob f = new FangJob();
+		f.setOrder(order);
+		int exitCode = ToolRunner.run(conf, f, args);
 		System.exit(exitCode);
 	}
 }
