@@ -317,7 +317,7 @@ public class FangJob extends Configured implements Tool {
 		
 		Configuration conf = new Configuration();
 		conf.setInt("nvar", nvar);
-		conf.setInt("maxsetsize", 1);
+		conf.setInt("maxsetsize", 8);
 		conf.set("datainput", "/user/mdejongh/input");
 		conf.set("countoutput", "/user/mdejongh/counts");
 		conf.set("structureoutput","/user/mdejongh/beststructure");
