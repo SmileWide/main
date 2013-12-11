@@ -41,10 +41,11 @@ public class IndependenceTestMapper extends Mapper<LongWritable, Void, Text, Tex
 	Pattern pat = new Pattern();	
 	String datafile = "";
 	SMILEData ds = new SMILEData();
-	int maxAdjacency = 0;
+	int adjacency = 0;
 	int randSeed = 0;
 	double significance = 0.05;
 	int numberoftests = 0;
+	boolean disc = true;
 	ArrayList<ArrayList<Set<Integer>>> sepsets = new ArrayList<ArrayList<Set<Integer>>>(); 
 	IndependenceStep itest = null;
 	/** Initializes class parameters*/
@@ -52,12 +53,14 @@ public class IndependenceTestMapper extends Mapper<LongWritable, Void, Text, Tex
 	protected void setup(Context context) {
 		Configuration conf = context.getConfiguration();
 		//set some constants here
-		maxAdjacency = conf.getInt("maxAdjacency", 0);
+		adjacency = conf.getInt("maxAdjacency", 0);
 		significance = conf.getDouble("significance", 0.05);
 		numberoftests = conf.getInt("numberoftests",0);
+		disc = conf.getBoolean("disc", true);
 		pat = new Pattern(conf.get("pattern"));
 		datafile = conf.get("thedata");
 		ds.Read(datafile);
+		//TODO MDJ: need to initialize sepsets data structure further
 	}
 	
 	/**Mapper
@@ -69,11 +72,11 @@ public class IndependenceTestMapper extends Mapper<LongWritable, Void, Text, Tex
 		randSeed = (int)(k & 0xffffffffL);
 		itest = new RandomIndependenceStep(randSeed,numberoftests);
 		try {
-			itest.execute(ds, pat, true, maxAdjacency, significance, sepsets);
+			itest.execute(ds, pat, disc, adjacency, significance, sepsets);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		//our output is the modified pattern and the new sepsets??
+		//TODO MDJ: our output is the modified pattern and the new sepsets??
 	}
 	
 }
