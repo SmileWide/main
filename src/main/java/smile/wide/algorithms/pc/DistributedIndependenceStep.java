@@ -11,6 +11,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 import smile.wide.data.DataSet;
 import smile.wide.data.SMILEData;
+import smile.wide.hadoop.io.RandSeedInputFormat;
 import smile.wide.utils.Pattern;
 
 /**
@@ -19,7 +20,7 @@ import smile.wide.utils.Pattern;
  */
 public class DistributedIndependenceStep extends IndependenceStep {
 	/**basic code framework to execute hadoop style stuff will be replaced with actual code*/
-	int numberoftests = 500;
+	int numberoftests = 100;
 	@Override
 	public void execute(DataSet ds, Pattern pat, boolean disc, int maxAdjacency, double significance, ArrayList<ArrayList<Set<Integer>>> sepsets) throws Exception {
 		SMILEData d = (SMILEData) ds;
@@ -30,7 +31,8 @@ public class DistributedIndependenceStep extends IndependenceStep {
 		conf.setInt("numberoftests",numberoftests);
 		conf.set("datastorage","/user/mdejongh/datatmp");
 		conf.set("testoutput","/user/mdejongh/testoutput");
-
+		conf.setInt(RandSeedInputFormat.CONFKEY_SEED_COUNT, Integer.parseInt("350"));//number of mappers to be run
+		conf.setInt(RandSeedInputFormat.CONFKEY_WARMUP_ITER, 100000);
 		String[] args = {};
 		DistributedIndependenceJob job = new DistributedIndependenceJob();
 		job.data = d;

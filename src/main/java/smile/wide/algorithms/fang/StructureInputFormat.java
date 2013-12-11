@@ -21,7 +21,7 @@ public class StructureInputFormat extends InputFormat<LongWritable, Void> {
 	@Override
 	public List<InputSplit> getSplits(JobContext context) throws IOException, InterruptedException {
 		Configuration conf = context.getConfiguration();
-		int count = conf.getInt("nvar", 0);//TODO MDJ We need some way to get info here, but newer compiled/older run is a problem.
+		int count = conf.getInt("nvar", 0);
 		ArrayList<InputSplit> out = new ArrayList<InputSplit>(count);
 		for (int i = 0; i < count; i ++) {
 			out.add(new StructureSplit(i));

@@ -23,11 +23,13 @@ public class RandomIndependenceStep extends IndependenceStep {
 
 	int seed = 0;
 	int numberoftests = 0;
+	public ArrayList<Pair<Integer,Integer>> removed = null;
+
 	public RandomIndependenceStep(int s, int n) {
 		seed = s;
 		numberoftests = n;
 	}
-
+	
 	@Override
 	public void execute(DataSet ds, Pattern pat, boolean disc, int adjacency, double significance, ArrayList<ArrayList<Set<Integer>>> sepsets) {
         IndependenceTest itest = null;
@@ -68,6 +70,7 @@ public class RandomIndependenceStep extends IndependenceStep {
 	                pat.setEdge(y, x, Pattern.EdgeType.None);
 	                sepsets.get(x).set(y,sepset);
 	                sepsets.get(y).set(x,sepset);
+	                removed.add(new Pair<Integer,Integer>(x,y));
 	            }
             	numberoftests--;
             }

@@ -27,11 +27,11 @@ import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.VIntWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import smile.wide.data.SMILEData;
+import smile.wide.hadoop.io.ItestPairArrayWritable;
 import smile.wide.hadoop.io.RandSeedInputFormat;
 import smile.wide.utils.Pattern;
 
@@ -71,9 +71,6 @@ public class DistributedIndependenceJob extends Configured implements Tool {
 		conf.set("edgelist","edgelist.txt");
 		conf.set("mapred.compress.map.output", "true");
 		conf.set("mapred.map.output.compression.codec", "org.apache.hadoop.io.compress.SnappyCodec"); 
-		conf.setInt(RandSeedInputFormat.CONFKEY_SEED_COUNT, Integer.parseInt("500"));
-		conf.setInt(RandSeedInputFormat.CONFKEY_WARMUP_ITER, 100000);
-
 		int maxAdjacency = conf.getInt("maxAdjacency",0);
 
 		for(int adjacency = 0; adjacency <= maxAdjacency;++adjacency) {
@@ -90,9 +87,11 @@ public class DistributedIndependenceJob extends Configured implements Tool {
 		job.setJarByClass(DistributedIndependenceJob.class);
 		job.setMapperClass(IndependenceTestMapper.class);
 		job.setMapOutputKeyClass(Text.class);
-		job.setMapOutputValueClass(VIntWritable.class);
-		job.setCombinerClass(HadoopIndCounterReducer.class);
-		job.setReducerClass(HadoopIndCounterReducer.class);
+		job.setMapOutputValueClass(ItestPairArrayWritable.class);
+
+		job.setCombinerClass(IndependenceTestReducer.class);
+		job.setReducerClass(IndependenceTestReducer.class);
+
 		job.setInputFormatClass(RandSeedInputFormat.class);
 		job.setNumReduceTasks(1);
 

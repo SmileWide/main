@@ -26,9 +26,11 @@ import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
+import org.apache.mahout.common.IntPairWritable;
 
 import smile.learning.DataSet;
 import smile.wide.data.SMILEData;
+import smile.wide.hadoop.io.ItestPairArrayWritable;
 import smile.wide.utils.Pair;
 import smile.wide.utils.Pattern;
 
@@ -37,7 +39,7 @@ import smile.wide.utils.Pattern;
  * @author m.a.dejongh@gmail.com
  *
  */
-public class IndependenceTestMapper extends Mapper<LongWritable, Void, Text, Text> {
+public class IndependenceTestMapper extends Mapper<LongWritable, Void, Text, ItestPairArrayWritable> {
 	Pattern pat = new Pattern();	
 	String datafile = "";
 	SMILEData ds = new SMILEData();
@@ -47,7 +49,7 @@ public class IndependenceTestMapper extends Mapper<LongWritable, Void, Text, Tex
 	int numberoftests = 0;
 	boolean disc = true;
 	ArrayList<ArrayList<Set<Integer>>> sepsets = new ArrayList<ArrayList<Set<Integer>>>(); 
-	IndependenceStep itest = null;
+	RandomIndependenceStep itest = null;
 	/** Initializes class parameters*/
 	@Override
 	protected void setup(Context context) {
@@ -60,7 +62,18 @@ public class IndependenceTestMapper extends Mapper<LongWritable, Void, Text, Tex
 		pat = new Pattern(conf.get("pattern"));
 		datafile = conf.get("thedata");
 		ds.Read(datafile);
-		//TODO MDJ: need to initialize sepsets data structure further
+		int nvar = pat.getSize();
+		//initialize sepsets data structure further
+        for (int x=0; x< nvar; x++) {
+        	sepsets.add(new ArrayList<Set<Integer> >());
+        }
+        for (int i = 0; i < nvar; i++)
+        {
+            for (int x=0; x< nvar; x++) {
+            	sepsets.get(i).add(new HashSet<Integer>());
+            }
+        }
+
 	}
 	
 	/**Mapper
@@ -70,13 +83,23 @@ public class IndependenceTestMapper extends Mapper<LongWritable, Void, Text, Tex
 		//get seeds
 		long k = key.get();
 		randSeed = (int)(k & 0xffffffffL);
+		ArrayList<Pair<Integer,Integer>> removed = new ArrayList<Pair<Integer,Integer>>();
 		itest = new RandomIndependenceStep(randSeed,numberoftests);
+		itest.removed = removed;
 		try {
 			itest.execute(ds, pat, disc, adjacency, significance, sepsets);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		//TODO MDJ: our output is the modified pattern and the new sepsets??
+		//process and output results
+		ArrayList<Pair<Pair<Integer,Integer>,ArrayList<Integer>>> tresult = new ArrayList<Pair<Pair<Integer,Integer>,ArrayList<Integer>>>();
+		for(Pair<Integer,Integer> i : removed) {
+			int x = i.getFirst();
+			int y = i.getSecond();
+			ArrayList<Integer> l = new ArrayList<Integer>(sepsets.get(x).get(y));
+			tresult.add(new Pair<Pair<Integer,Integer>,ArrayList<Integer>>(i,l));
+		}
+		ItestPairArrayWritable result = new ItestPairArrayWritable(tresult);
+		context.write(new Text("key"), result);
 	}
-	
 }

@@ -293,7 +293,8 @@ public class PC {
 		Pattern pat = new Pattern();
 		PC alg = new PC();
 		//alg.istep = new HadoopIndependenceStep();
-		alg.maxAdjacency = 8;
+		alg.istep = new DistributedIndependenceStep();
+		alg.maxAdjacency = 1;
 		alg.significance = 0.05;
 		pat = alg.Learn(ds);
 		pat.Print();
