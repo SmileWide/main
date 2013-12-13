@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import smile.wide.data.DataSet;
+import smile.wide.utils.DataCounter;
 import smile.wide.utils.LazyADTree;
 import smile.wide.utils.Pair;
 import smile.wide.utils.SMILEMath;
@@ -20,14 +21,17 @@ import smile.wide.utils.SMILEMath;
  */
 public class DiscIndependenceTest extends IndependenceTest {
 	/**AD Tree datastructure, contains counts*/
-	LazyADTree ad = null;
+	DataCounter ad = null;
 	/**Constructor
 	 * initializes AD Tree structure
 	 * @param tds
 	 */
-	public DiscIndependenceTest(DataSet tds) {
+	public DiscIndependenceTest(DataSet tds, DataCounter dc) {
 		super(tds);
-        ad = new LazyADTree(ds);
+		if(dc == null)
+			ad = new LazyADTree(ds);
+		else
+			ad = dc;
 	}
 	/**calcPValue
 	 * discrete independence test

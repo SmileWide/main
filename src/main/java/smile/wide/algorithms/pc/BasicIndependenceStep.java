@@ -25,7 +25,7 @@ public class BasicIndependenceStep extends IndependenceStep {
         final int nvar = ds.getNumberOfVariables();
         
         if(disc) {
-        	itest = new DiscIndependenceTest(ds);
+        	itest = new DiscIndependenceTest(ds,null);
         }
         else {
         	itest = new ContIndependenceTest(ds);

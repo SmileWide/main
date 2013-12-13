@@ -66,7 +66,7 @@ public final class ItestPairWritable implements WritableComparable<ItestPairWrit
 
 	  @Override
 	  public String toString() {
-	    return first + "\t" + second;
+	    return "("+first.toString() + "," + second.toString()+")";
 	  }
 	  
 	  @Override

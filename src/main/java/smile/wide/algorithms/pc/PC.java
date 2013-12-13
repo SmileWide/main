@@ -294,7 +294,7 @@ public class PC {
 		PC alg = new PC();
 		//alg.istep = new HadoopIndependenceStep();
 		alg.istep = new DistributedIndependenceStep();
-		alg.maxAdjacency = 1;
+		alg.maxAdjacency = 8;
 		alg.significance = 0.05;
 		pat = alg.Learn(ds);
 		pat.Print();

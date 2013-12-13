@@ -18,17 +18,12 @@ package smile.wide.algorithms.pc;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
-import org.apache.mahout.common.IntPairWritable;
-
-import smile.learning.DataSet;
 import smile.wide.data.SMILEData;
 import smile.wide.hadoop.io.ItestPairArrayWritable;
 import smile.wide.utils.Pair;
@@ -40,23 +35,27 @@ import smile.wide.utils.Pattern;
  *
  */
 public class IndependenceTestMapper extends Mapper<LongWritable, Void, Text, ItestPairArrayWritable> {
-	Pattern pat = new Pattern();	
 	String datafile = "";
-	SMILEData ds = new SMILEData();
 	int adjacency = 0;
 	int randSeed = 0;
 	double significance = 0.05;
 	int numberoftests = 0;
 	boolean disc = true;
+	Pattern pat = new Pattern();	
+	SMILEData ds = new SMILEData();
 	ArrayList<ArrayList<Set<Integer>>> sepsets = new ArrayList<ArrayList<Set<Integer>>>(); 
 	RandomIndependenceStep itest = null;
+    ArrayList<Pair<Integer,Integer>> removed = new ArrayList<Pair<Integer,Integer>>();
+	ArrayList<Pair<Pair<Integer,Integer>,ArrayList<Integer>>> tresult = new ArrayList<Pair<Pair<Integer,Integer>,ArrayList<Integer>>>();
+	ArrayList<Integer> l = null;
+	final static Text thekey = new Text("key");
 	/** Initializes class parameters*/
 	@Override
 	protected void setup(Context context) {
 		Configuration conf = context.getConfiguration();
 		//set some constants here
-		adjacency = conf.getInt("maxAdjacency", 0);
-		significance = conf.getDouble("significance", 0.05);
+		adjacency = conf.getInt("adjacency", 0);
+		significance = (double) conf.getFloat("significance", (float) 0.05);
 		numberoftests = conf.getInt("numberoftests",0);
 		disc = conf.getBoolean("disc", true);
 		pat = new Pattern(conf.get("pattern"));
@@ -73,7 +72,6 @@ public class IndependenceTestMapper extends Mapper<LongWritable, Void, Text, Ite
             	sepsets.get(i).add(new HashSet<Integer>());
             }
         }
-
 	}
 	
 	/**Mapper
@@ -83,7 +81,6 @@ public class IndependenceTestMapper extends Mapper<LongWritable, Void, Text, Ite
 		//get seeds
 		long k = key.get();
 		randSeed = (int)(k & 0xffffffffL);
-		ArrayList<Pair<Integer,Integer>> removed = new ArrayList<Pair<Integer,Integer>>();
 		itest = new RandomIndependenceStep(randSeed,numberoftests);
 		itest.removed = removed;
 		try {
@@ -92,14 +89,14 @@ public class IndependenceTestMapper extends Mapper<LongWritable, Void, Text, Ite
 			e.printStackTrace();
 		}
 		//process and output results
-		ArrayList<Pair<Pair<Integer,Integer>,ArrayList<Integer>>> tresult = new ArrayList<Pair<Pair<Integer,Integer>,ArrayList<Integer>>>();
 		for(Pair<Integer,Integer> i : removed) {
 			int x = i.getFirst();
 			int y = i.getSecond();
-			ArrayList<Integer> l = new ArrayList<Integer>(sepsets.get(x).get(y));
+			l = new ArrayList<Integer>(sepsets.get(x).get(y));
 			tresult.add(new Pair<Pair<Integer,Integer>,ArrayList<Integer>>(i,l));
 		}
 		ItestPairArrayWritable result = new ItestPairArrayWritable(tresult);
-		context.write(new Text("key"), result);
+		context.write(thekey, result);
+		ds.dispose();
 	}
 }

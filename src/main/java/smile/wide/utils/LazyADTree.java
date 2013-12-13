@@ -59,7 +59,7 @@ class LazyADNode
  * they are necessary
  * @author m.a.dejongh@gmail.com
  */
-public class LazyADTree {
+public class LazyADTree extends DataCounter{
 	/**number of variables*/
 	int nvar;
 	/**arry with number of states
@@ -68,8 +68,6 @@ public class LazyADTree {
 	ArrayList<Integer> nstates;
 	/**root node of the AD tree*/
 	LazyADNode root;
-	/**dataset to base the tree on*/
-	DataSet ds;
 
 	/**returns number of variables*/
 	public int numVars() { 
@@ -91,7 +89,7 @@ public class LazyADTree {
 	 */
 	public LazyADTree(DataSet ds_)
 	{
-		ds = ds_;
+		super(ds_);
 		create();
 	}
 
@@ -220,7 +218,6 @@ public class LazyADTree {
 				if (tmpad.varynodes == null) {
 					tmpad.varynodes = new ArrayList<LazyVaryNode>(Collections.nCopies(max, (LazyVaryNode) null));
 				}
-				//System.out.println("i: " + i + " j: " + j + " max:" + max + " var: " + var + " tmpad.varynodes.size(): " + tmpad.varynodes.size());
 				if(tmpad.varynodes.get(var) == null) {
 					tmpad.varynodes.set(var, new LazyVaryNode());
 				}

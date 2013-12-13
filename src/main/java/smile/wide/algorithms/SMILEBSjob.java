@@ -73,7 +73,7 @@ public class SMILEBSjob extends Configured implements Tool {
 		Configuration conf = super.getConf();
 		conf.set("trainfile", params[0]);
 		//distributed cache initialization
-		DistributedCache.createSymlink(conf);		
+		DistributedCache.createSymlink(conf);
 
 		DistributedCache.addFileToClassPath(new Path(libHDFSPath_ + "/smile.jar"), conf);
 		DistributedCache.addCacheFile(

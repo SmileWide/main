@@ -12,8 +12,10 @@ import smile.wide.algorithms.independence.ContIndependenceTest;
 import smile.wide.algorithms.independence.DiscIndependenceTest;
 import smile.wide.algorithms.independence.IndependenceTest;
 import smile.wide.data.DataSet;
+import smile.wide.utils.DataCounter;
 import smile.wide.utils.Pair;
 import smile.wide.utils.Pattern;
+import smile.wide.utils.PlainDataCounter;
 
 /**
  * @author m.a.dejongh@gmail.com
@@ -33,9 +35,11 @@ public class RandomIndependenceStep extends IndependenceStep {
 	@Override
 	public void execute(DataSet ds, Pattern pat, boolean disc, int adjacency, double significance, ArrayList<ArrayList<Set<Integer>>> sepsets) {
         IndependenceTest itest = null;
-        final int nvar = ds.getNumberOfVariables();
+        DataCounter ct = null;
+        if(adjacency > 4)//TODO MDJ: need this?
+        	ct = new PlainDataCounter(ds);
         if(disc)
-        	itest = new DiscIndependenceTest(ds);
+        	itest = new DiscIndependenceTest(ds, ct);
         else
         	itest = new ContIndependenceTest(ds);
 
@@ -43,7 +47,7 @@ public class RandomIndependenceStep extends IndependenceStep {
         //perhaps add an extra container for the removed edges
         Random rn = new Random(seed);
         
-        //count number of edges in patter
+        //count number of edges in pattern
         int edgesLeft = 0;
         for(int x = 0; x < pat.getSize(); ++x)
         	for(int y=x+1;y< pat.getSize(); ++y)

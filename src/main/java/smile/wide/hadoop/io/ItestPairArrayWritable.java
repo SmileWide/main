@@ -67,5 +67,22 @@ public class ItestPairArrayWritable extends ArrayWritable {
 		}
 		else
 			return a.length - b.length;
-	} 
+	}
+	
+	@Override
+	public String toString() {
+		String result = "";
+		Writable[] a = get();
+		ItestPairWritable l;
+		result+="{";
+		for(int x = 0 ;x < a.length;++x) {
+			l = (ItestPairWritable) a[x];
+			if(x > 0)
+				result += "," + l.toString();
+			else
+				result += l.toString();
+ 		}
+		result+="}";
+		return result;
+	}
 }

@@ -46,5 +46,23 @@ public class IntArrayWritable extends ArrayWritable {
 		}
 		else
 			return a.length - b.length;
-	} 
+	}
+
+	@Override
+	public String toString() {
+		String result = "";
+		Writable[] a = get();
+		IntWritable l;
+		result+="{";
+		for(int x = 0 ;x < a.length;++x) {
+			l = (IntWritable) a[x];
+			if(x>0)
+				result += "," + l.toString();
+			else
+				result += l.toString();
+ 		}
+		result+="}";
+		return result;
+	}
+
 }

@@ -15,6 +15,10 @@ public class SMILEData extends DataSet {
 	private  String fileName_ = null;				// most recent location
 	
 	// =========================================================================
+	public void dispose() {
+		data.dispose();
+	}
+	
 	public void Read(String filename) {
 		if(data == null)
 			data = new smile.learning.DataSet();
