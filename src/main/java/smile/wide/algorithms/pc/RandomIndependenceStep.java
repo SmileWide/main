@@ -36,8 +36,8 @@ public class RandomIndependenceStep extends IndependenceStep {
 	public void execute(DataSet ds, Pattern pat, boolean disc, int adjacency, double significance, ArrayList<ArrayList<Set<Integer>>> sepsets) {
         IndependenceTest itest = null;
         DataCounter ct = null;
-        if(adjacency > 4)//TODO MDJ: need this?
-        	ct = new PlainDataCounter(ds);
+//        if(adjacency > 4)//TODO MDJ: need this?
+//        	ct = new PlainDataCounter(ds);
         if(disc)
         	itest = new DiscIndependenceTest(ds, ct);
         else

@@ -3,6 +3,7 @@ package smile.wide.utils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.ListIterator;
 
 import org.apache.commons.lang.mutable.MutableInt;
@@ -33,6 +34,10 @@ class LazyVaryNode//OK
 	LazyVaryNode() { adnodes = null;}
 	/**array with adnodes*/
 	ArrayList<LazyADNode> adnodes;
+	protected void finalize() throws Throwable {
+		Global.varycntr--;
+	}
+
 };
 
 /** LazyVary node datastructure 
@@ -43,15 +48,25 @@ class LazyVaryNode//OK
 class LazyADNode
 {
 	/**constructor, sets array to null and inits count to 0*/
-	LazyADNode() { varynodes = null; count = 0; }
+	LazyADNode() { varynodes = null; count = 0; record_indices = new ArrayList<Integer>();}
 	/**constructor, sets array to null, inits count to 0, and sets max to m*/
-    LazyADNode(int m) { varynodes = null; count = 0; max = m;}
+    LazyADNode(int m) { varynodes = null; count = 0; max = m;record_indices = new ArrayList<Integer>();}
     /** count for current variable assignment*/
     int count;
     /** max number of children*/
 	int max;
 	ArrayList<LazyVaryNode> varynodes;
+	boolean leaf_node = false;
+	ArrayList<Integer> record_indices;
+	protected void finalize() throws Throwable {
+		Global.nodecntr--;
+	}
 };
+
+class Global {
+public static int varycntr=0;
+public static int nodecntr=0;
+}
 
 /**ADTree class
  * the class is "lazy" since entries
@@ -60,6 +75,7 @@ class LazyADNode
  * @author m.a.dejongh@gmail.com
  */
 public class LazyADTree extends DataCounter{
+	
 	/**number of variables*/
 	int nvar;
 	/**arry with number of states
@@ -122,8 +138,14 @@ public class LazyADTree extends DataCounter{
 	/**returns the co-occurrence count of the provided variable assignment
 	 * @param query, variable assignment
 	 * */
+	int sample =0;
+	int min_count = 100;
+
 	public int getCount(ArrayList<Pair<Integer, Integer> > _query)
 	{
+//		if((sample++)%100000 == 0)
+//			System.out.println("leaves "+leaves+" varynodes "+Global.varycntr+" nodecount "+Global.nodecntr);
+		
 		boolean dosort = false;
 		ArrayList<Pair<Integer, Integer> > query = new ArrayList<Pair<Integer,Integer>>();
     	for(Pair<Integer,Integer> i : _query) {
@@ -166,15 +188,36 @@ public class LazyADTree extends DataCounter{
 	 * @param query, variable assignment
 	 * @param node index of variable assignment
 	 * */
+	
+	int leaves=0;
+	
 	int retrieveCount(LazyADNode ad, ArrayList<Pair<Integer, Integer> > query, MutableInt idx) {
 		while (idx.intValue() >= 0) {
+			///*
+			if(ad.record_indices != null && ad.count > min_count) {
+					ad.leaf_node = false;
+					ad.record_indices.clear();
+					ad.record_indices = null;
+			}
+			if(!ad.leaf_node && ad.count > 0 && ad.count <= min_count) {
+				ad.leaf_node = true;
+				if(ad.varynodes != null) {
+					ad.varynodes.clear();
+					ad.varynodes = null;
+				}
+			}
+			//*/
+			if(ad.leaf_node) {
+				leaves++;
+				return leafCount(query,ad.record_indices);
+			}
 			if (ad.varynodes == null) {
 				return -1;
 			}
 			else {
 				Pair<Integer, Integer> p = query.get(idx.intValue());
 				LazyVaryNode v = ad.varynodes.get(p.getFirst());
-				if(v==null) {
+				if(v==null) { //And we did calculate all others? For MCV?
 					return -1;
 				}
 				if (v.adnodes == null) {
@@ -202,16 +245,14 @@ public class LazyADTree extends DataCounter{
 	 */
 	void updateTreeCounts(LazyADNode root, ArrayList<Pair<Integer, Integer> > query, int idx) {
 		LazyADNode tmpad;
-		ListIterator<Pair<Integer,Integer>> tmpq;
 	    int qsize = query.size();
 		int recCount = ds.getNumberOfRecords();
 	    for (int i = 0; i < recCount; i++)
 	    {
 			tmpad = root;
-			tmpq = query.listIterator(qsize);
 	        for (int j = qsize - 1; j >= 0; j--) {
 				// select variable and its value
-				int var = tmpq.previous().getFirst();//and move back
+				int var = query.get(j).getFirst();
 	            int val = ds.getInt(var, i);
 				// create varynode and adnode if necessary
 				int max = tmpad.max;
@@ -220,6 +261,7 @@ public class LazyADTree extends DataCounter{
 				}
 				if(tmpad.varynodes.get(var) == null) {
 					tmpad.varynodes.set(var, new LazyVaryNode());
+					Global.varycntr++;
 				}
 				LazyVaryNode v = tmpad.varynodes.get(var);//pointer arithmetic 
 				if (v.adnodes == null) {
@@ -227,13 +269,48 @@ public class LazyADTree extends DataCounter{
 				}
 				if (v.adnodes.get(val) == null) {
 					v.adnodes.set(val,new LazyADNode(var));
+					Global.nodecntr++;
 				}
 				tmpad = v.adnodes.get(val);
 				// only increment count if this part of the tree is new
 				if (j <= idx) {
 					tmpad.count++;
+					if(tmpad.count <= min_count)
+						tmpad.record_indices.add(i);
+					else {
+						if(tmpad.record_indices != null) {
+							tmpad.leaf_node = false;
+							tmpad.record_indices.clear();
+							tmpad.record_indices = null;
+						}
+					}
 				}
 	        }
 	    }
+	}
+	
+	/** function for counting using leaf nodes
+	 * idea is that nodes with small counts don't
+	 * have kids, we recalculate when we need it
+	 * @param query
+	 * @param indices
+	 * @return
+	 */
+	int leafCount(ArrayList<Pair<Integer, Integer> > query, ArrayList<Integer> indices) {
+		int count = 0;
+		for(Integer i : indices) {
+			boolean cnt = true;
+			for(Pair<Integer,Integer> p : query) {
+				int var = p.getFirst();
+				int val = p.getSecond();
+				if(val != ds.getInt(var, i)) {
+					cnt = false;
+					break;
+				}
+			}
+			if(cnt)
+				count++;
+		}
+		return count;
 	}
 }
