@@ -13,9 +13,9 @@ import smile.wide.algorithms.independence.DiscIndependenceTest;
 import smile.wide.algorithms.independence.IndependenceTest;
 import smile.wide.data.DataSet;
 import smile.wide.utils.DataCounter;
+import smile.wide.utils.LazyADTree;
 import smile.wide.utils.Pair;
 import smile.wide.utils.Pattern;
-import smile.wide.utils.PlainDataCounter;
 
 /**
  * @author m.a.dejongh@gmail.com
@@ -36,8 +36,8 @@ public class RandomIndependenceStep extends IndependenceStep {
 	public void execute(DataSet ds, Pattern pat, boolean disc, int adjacency, double significance, ArrayList<ArrayList<Set<Integer>>> sepsets) {
         IndependenceTest itest = null;
         DataCounter ct = null;
-//        if(adjacency > 4)//TODO MDJ: need this?
-//        	ct = new PlainDataCounter(ds);
+        if(adjacency > 3)//TODO MDJ: need this?
+        	ct = new LazyADTree(ds,0);
         if(disc)
         	itest = new DiscIndependenceTest(ds, ct);
         else

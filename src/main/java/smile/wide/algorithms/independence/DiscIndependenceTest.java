@@ -208,7 +208,8 @@ public class DiscIndependenceTest extends IndependenceTest {
                 double logexijk = Math.log((double) xi_k) + Math.log((double) x_jk) - Math.log((double) x__k);
                 g2 += xijk * (Math.log((double) xijk) - logexijk);
             }
-    	}
+        }
+        
     	//New calculation of degrees of freedom
     	// process empty rows/columns
     	Iterator<ArrayList<Pair<Integer,Integer>>> itt;

@@ -3,12 +3,18 @@ package smile.wide.utils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.ListIterator;
+import java.util.Stack;
 
 import org.apache.commons.lang.mutable.MutableInt;
 
 import smile.wide.data.DataSet;
+
+class Global {
+	public static int sample = 0;
+	public static int varycntr = 0;
+	public static int nodecntr = 0;
+	public static int leaves = 0;
+}
 
 /** Comparator class for Pair objects 
  * allows for sorting of Pairs by
@@ -28,12 +34,10 @@ class PairComparator implements Comparator<Pair<Integer,Integer>> {
  * of an AD tree
  * @author m.a.dejongh@gmail.com
  */
-class LazyVaryNode//OK
+class LazyVaryNode
 {
-	/**constructor*/
-	LazyVaryNode() { adnodes = null;}
 	/**array with adnodes*/
-	ArrayList<LazyADNode> adnodes;
+	ArrayList<LazyADNode> adnodes = new ArrayList<LazyADNode>();
 	protected void finalize() throws Throwable {
 		Global.varycntr--;
 	}
@@ -48,25 +52,20 @@ class LazyVaryNode//OK
 class LazyADNode
 {
 	/**constructor, sets array to null and inits count to 0*/
-	LazyADNode() { varynodes = null; count = 0; record_indices = new ArrayList<Integer>();}
+	LazyADNode() {}
 	/**constructor, sets array to null, inits count to 0, and sets max to m*/
-    LazyADNode(int m) { varynodes = null; count = 0; max = m;record_indices = new ArrayList<Integer>();}
+    LazyADNode(int m) {max = m;}
     /** count for current variable assignment*/
-    int count;
+    int count=0;
     /** max number of children*/
-	int max;
-	ArrayList<LazyVaryNode> varynodes;
+	int max=-1;
 	boolean leaf_node = false;
-	ArrayList<Integer> record_indices;
+	ArrayList<LazyVaryNode> varynodes = new ArrayList<LazyVaryNode>();
+	ArrayList<Integer> record_indices = new ArrayList<Integer>();
 	protected void finalize() throws Throwable {
 		Global.nodecntr--;
 	}
 };
-
-class Global {
-public static int varycntr=0;
-public static int nodecntr=0;
-}
 
 /**ADTree class
  * the class is "lazy" since entries
@@ -75,16 +74,107 @@ public static int nodecntr=0;
  * @author m.a.dejongh@gmail.com
  */
 public class LazyADTree extends DataCounter{
-	
-	/**number of variables*/
+	int min_count = 0;
 	int nvar;
-	/**arry with number of states
-	 * for each variable
-	 */
+	int free_adnodes = 10000;
+	int free_varynodes = 10000;
+	int adnodeptr = 0;
+	int vrnodeptr = 0;
 	ArrayList<Integer> nstates;
-	/**root node of the AD tree*/
 	LazyADNode root;
-
+	ArrayList<LazyADNode> adnodes = new ArrayList<LazyADNode>();
+	ArrayList<LazyVaryNode> varynodes = new ArrayList<LazyVaryNode>();
+	Stack<LazyADNode> adnodebin = new Stack<LazyADNode>();
+	Stack<LazyVaryNode> varynodebin = new Stack<LazyVaryNode>();
+	Stack<Pair<Integer,Integer>> pairbin = new Stack<Pair<Integer,Integer>>();
+	ArrayList<Pair<Integer, Integer> > query = new ArrayList<Pair<Integer,Integer>>();
+	PairComparator pcomp = new PairComparator();
+	MutableInt mutint = new MutableInt();
+	private void wipeVaryNode(LazyVaryNode n) {
+		if(n != null) {
+			varynodebin.push(n);
+			if(!n.adnodes.isEmpty()) {
+				for(LazyADNode a: n.adnodes)
+					wipeADNode(a);
+				n.adnodes.clear();
+			}
+		}
+	}
+	
+	private void wipeADNode(LazyADNode n) {
+		if(n != null) {
+			adnodebin.push(n);
+			n.record_indices.clear();
+			n.count = 0;
+			n.leaf_node = false;
+			if(!n.varynodes.isEmpty()) {
+				for(LazyVaryNode v: n.varynodes)
+					wipeVaryNode(v);
+				n.varynodes.clear();
+			}
+		}
+	}
+	
+	private void addADNodes(int n) {
+		for(int x=0;x<n;++x)
+			adnodes.add(new LazyADNode());
+	}
+	
+	private void addVaryNodes(int n) {
+		for(int x=0;x<n;++x)
+			varynodes.add(new LazyVaryNode());
+	}
+	
+	private LazyADNode newADNode(int var) {
+		LazyADNode a = null;
+		if(!adnodebin.isEmpty())
+			a = adnodebin.pop();
+		else {
+			Global.nodecntr++;
+			if(adnodeptr==free_adnodes) {
+				addADNodes(10000);
+				free_adnodes+=10000;
+			}
+			a = adnodes.get(adnodeptr++);
+		}
+		a.max = var;
+		return a;
+	}
+	
+	private LazyVaryNode newVaryNode() {
+		LazyVaryNode v = null;
+		if(!varynodebin.isEmpty()) {
+			v = varynodebin.pop();
+		}
+		else {
+			Global.varycntr++;
+			if(vrnodeptr==free_varynodes) {
+				addVaryNodes(10000);
+				free_varynodes +=10000;
+			}
+			v= varynodes.get(vrnodeptr++);
+		}
+		return v;
+	}
+	
+	private Pair<Integer,Integer> newPair(int left, int right) {
+		Pair<Integer,Integer> p = null;
+		if(pairbin.isEmpty())
+			p = new Pair<Integer,Integer>(left,right);
+		else {
+			p = pairbin.pop();
+			p.setFirst(left);
+			p.setSecond(right);
+		}
+		return p;
+	}
+	
+	private void wipeQuery(ArrayList<Pair<Integer,Integer>> q) {
+		for(Pair<Integer,Integer> p : q)
+			pairbin.push(p);
+		q.clear();
+	}
+	
 	/**returns number of variables*/
 	public int numVars() { 
 		return nvar; 
@@ -106,19 +196,40 @@ public class LazyADTree extends DataCounter{
 	public LazyADTree(DataSet ds_)
 	{
 		super(ds_);
-		create();
+		create(min_count);
+		addADNodes(free_adnodes);
+		addVaryNodes(free_varynodes);
+		
 	}
 
+	public LazyADTree(DataSet ds_,int mc)
+	{
+		super(ds_);
+		create(mc);
+	}
+
+	
 	/**clears the tree*/
 	void kill()
 	{
 		root.varynodes.clear();
+		adnodes.clear();
+		varynodes.clear();
+		adnodebin.clear();
+		varynodebin.clear();	
+		adnodeptr = 0;
+		vrnodeptr = 0;
+		free_adnodes = 10000;
+		free_varynodes = 10000;
 		root = null;
+		System.out.println("WE ARE KILLING THE TREE");
+		//System.exit(-1);
 	}
 
 	/**creates a new tree*/
-	void create()
+	void create(int mc)
 	{
+		min_count = mc;
 		nvar = ds.getNumberOfVariables();
 		nstates = new ArrayList<Integer>();
 	    for (int j = 0; j < nvar; j++)
@@ -133,44 +244,41 @@ public class LazyADTree extends DataCounter{
 	    }
 	    root = new LazyADNode(nvar);
 		root.count = ds.getNumberOfRecords();
+		addADNodes(free_adnodes);
+		addVaryNodes(free_varynodes);
 	}
 	
 	/**returns the co-occurrence count of the provided variable assignment
 	 * @param query, variable assignment
 	 * */
-	int sample =0;
-	int min_count = 100;
-
 	public int getCount(ArrayList<Pair<Integer, Integer> > _query)
 	{
-//		if((sample++)%100000 == 0)
-//			System.out.println("leaves "+leaves+" varynodes "+Global.varycntr+" nodecount "+Global.nodecntr);
-		
+		if((Global.sample++)%100000 == 0)
+			System.out.println("leaves "+Global.leaves+" varynodes "+Global.varycntr+" nodecount "+Global.nodecntr+" varynodebin "+varynodebin.size()+" adnodebin "+adnodebin.size());
 		boolean dosort = false;
-		ArrayList<Pair<Integer, Integer> > query = new ArrayList<Pair<Integer,Integer>>();
-    	for(Pair<Integer,Integer> i : _query) {
-    	    query.add(new Pair<Integer,Integer>(i.getFirst(),i.getSecond()));
-    	}
+		wipeQuery(query);
+		for(Pair<Integer,Integer> i : _query)
+    	    query.add(newPair(i.getFirst(),i.getSecond()));
     	try {
-			if (query.size() == 0) {
+			if (query.size() == 0)
 				return root.count;
-			}
 			for(int x = 0; x < query.size()-1; ++x)
 				if(query.get(x).getFirst() > query.get(x+1).getFirst()) {
 					dosort = true;
 					break;
 				}
 			if(dosort)
-				Collections.sort(query, new PairComparator());
+				Collections.sort(query, pcomp);
 
-			MutableInt idx = new MutableInt(query.size() - 1);
+			MutableInt idx = mutint;
+			idx.setValue(query.size() - 1);
 			int count = retrieveCount(root, query, idx);
 			if (count >= 0) {
 				return count;
 			}
 			else {
 				updateTreeCounts(root, query, idx.intValue());
-				idx = new MutableInt(query.size() - 1);
+				idx.setValue(query.size() - 1);
 				count = retrieveCount(root, query, idx);
 				assert(count >= 0);
 				return count;
@@ -178,7 +286,7 @@ public class LazyADTree extends DataCounter{
 		}
 		catch (OutOfMemoryError e) {
 			kill();
-			create();
+			create(min_count);
 			return getCount(query);
 		}
 	}
@@ -188,39 +296,38 @@ public class LazyADTree extends DataCounter{
 	 * @param query, variable assignment
 	 * @param node index of variable assignment
 	 * */
-	
-	int leaves=0;
-	
-	int retrieveCount(LazyADNode ad, ArrayList<Pair<Integer, Integer> > query, MutableInt idx) {
+	int retrieveCount(LazyADNode ad, ArrayList<Pair<Integer, Integer> > _query, MutableInt idx) {
 		while (idx.intValue() >= 0) {
-			///*
-			if(ad.record_indices != null && ad.count > min_count) {
+			//LEAF NODE CODE *************************************
+			if(ad.record_indices.size() > 0 && ad.count > min_count) {
 					ad.leaf_node = false;
 					ad.record_indices.clear();
-					ad.record_indices = null;
 			}
 			if(!ad.leaf_node && ad.count > 0 && ad.count <= min_count) {
 				ad.leaf_node = true;
-				if(ad.varynodes != null) {
+				if(!ad.varynodes.isEmpty()) {
+					for(LazyVaryNode v: ad.varynodes) {
+						wipeVaryNode(v);
+					}
 					ad.varynodes.clear();
-					ad.varynodes = null;
+					//ad.varynodes = null;
 				}
 			}
-			//*/
 			if(ad.leaf_node) {
-				leaves++;
-				return leafCount(query,ad.record_indices);
+				Global.leaves++;
+				return leafCount(_query,ad.record_indices);
 			}
-			if (ad.varynodes == null) {
+			//END LEAF NODE CODE *********************************
+			if (ad.varynodes.isEmpty()) {
 				return -1;
 			}
 			else {
-				Pair<Integer, Integer> p = query.get(idx.intValue());
+				Pair<Integer, Integer> p = _query.get(idx.intValue());
 				LazyVaryNode v = ad.varynodes.get(p.getFirst());
 				if(v==null) { //And we did calculate all others? For MCV?
 					return -1;
 				}
-				if (v.adnodes == null) {
+				if (v.adnodes.isEmpty()) {
 					return -1;
 				}
 				else {
@@ -243,47 +350,42 @@ public class LazyADTree extends DataCounter{
 	 * @param query variable assignment
 	 * @param idx node index of variable assignment
 	 */
-	void updateTreeCounts(LazyADNode root, ArrayList<Pair<Integer, Integer> > query, int idx) {
+	void updateTreeCounts(LazyADNode root, ArrayList<Pair<Integer, Integer> > _query, int idx) {
 		LazyADNode tmpad;
-	    int qsize = query.size();
+	    int qsize = _query.size();
 		int recCount = ds.getNumberOfRecords();
 	    for (int i = 0; i < recCount; i++)
 	    {
 			tmpad = root;
 	        for (int j = qsize - 1; j >= 0; j--) {
 				// select variable and its value
-				int var = query.get(j).getFirst();
+				int var = _query.get(j).getFirst();
 	            int val = ds.getInt(var, i);
 				// create varynode and adnode if necessary
 				int max = tmpad.max;
-				if (tmpad.varynodes == null) {
-					tmpad.varynodes = new ArrayList<LazyVaryNode>(Collections.nCopies(max, (LazyVaryNode) null));
+				if (tmpad.varynodes.isEmpty()) {
+					for(int x=0;x<max;++x)
+						tmpad.varynodes.add(null);
 				}
 				if(tmpad.varynodes.get(var) == null) {
-					tmpad.varynodes.set(var, new LazyVaryNode());
-					Global.varycntr++;
+					tmpad.varynodes.set(var, newVaryNode());
 				}
 				LazyVaryNode v = tmpad.varynodes.get(var);//pointer arithmetic 
-				if (v.adnodes == null) {
-					v.adnodes = new ArrayList<LazyADNode>(Collections.nCopies(nstates.get(var), (LazyADNode) null));
+				if (v.adnodes.isEmpty()) {
+					for(int x=0;x<nstates.get(var);++x)
+						v.adnodes.add(null);
 				}
 				if (v.adnodes.get(val) == null) {
-					v.adnodes.set(val,new LazyADNode(var));
-					Global.nodecntr++;
+					v.adnodes.set(val,newADNode(var));
 				}
 				tmpad = v.adnodes.get(val);
 				// only increment count if this part of the tree is new
 				if (j <= idx) {
 					tmpad.count++;
+					//LEAF NODE CODE *************************************
 					if(tmpad.count <= min_count)
 						tmpad.record_indices.add(i);
-					else {
-						if(tmpad.record_indices != null) {
-							tmpad.leaf_node = false;
-							tmpad.record_indices.clear();
-							tmpad.record_indices = null;
-						}
-					}
+					//END LEAF NODE CODE *********************************
 				}
 	        }
 	    }
@@ -296,11 +398,11 @@ public class LazyADTree extends DataCounter{
 	 * @param indices
 	 * @return
 	 */
-	int leafCount(ArrayList<Pair<Integer, Integer> > query, ArrayList<Integer> indices) {
+	int leafCount(ArrayList<Pair<Integer, Integer> > _query, ArrayList<Integer> indices) {
 		int count = 0;
 		for(Integer i : indices) {
 			boolean cnt = true;
-			for(Pair<Integer,Integer> p : query) {
+			for(Pair<Integer,Integer> p : _query) {
 				int var = p.getFirst();
 				int val = p.getSecond();
 				if(val != ds.getInt(var, i)) {

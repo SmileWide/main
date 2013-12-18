@@ -131,7 +131,7 @@ public class SMILEMath {
 
 	 if (x<0.0 || a<=0.0) 
 	 {
-      throw new IllegalArgumentException("Bad Input values into gammq");
+      throw new IllegalArgumentException("Bad Input values into gammq, a="+a+" x="+x);
 	 }
 	 if (x < (a+1.0))
 	 {
