@@ -44,7 +44,9 @@ public abstract class IndependenceTest {
 
         MutableDouble pvalyx = new MutableDouble(0);
         HashSet<Integer> sepsetyx = new HashSet<Integer>();
-        checkCI(pat, card, y, x, pvalyx, sepsetyx, signif);
+        //MDJ: my test, if we find one we stop
+        if(pvalxy.doubleValue() == 0)
+        	checkCI(pat, card, y, x, pvalyx, sepsetyx, signif);
        
         if (pvalxy.doubleValue() > 0 || pvalyx.doubleValue() > 0)
         {
@@ -80,9 +82,6 @@ public abstract class IndependenceTest {
     {
         int nvar = ds.getNumberOfVariables();//number of variables in dataset
 
-        // <x,y>
-        assert(pat.getEdge(x, y) != Pattern.EdgeType.None);
-
         // populate elements vector
         ArrayList<Integer> elements=new ArrayList<Integer>();
         int i;
@@ -91,7 +90,7 @@ public abstract class IndependenceTest {
                     elements.add(i);
             }
         }
-
+        
         // check for enough elements
         if ((int) elements.size() < card) {
             return;
@@ -124,6 +123,8 @@ public abstract class IndependenceTest {
                 for(Integer q : z) {
                 	sepset.add(q.intValue());
                 }
+                //MDJ: my test, just stop if we find one
+                break;
             }
         }
     }

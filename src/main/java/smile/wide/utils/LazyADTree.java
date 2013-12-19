@@ -41,7 +41,6 @@ class LazyVaryNode
 	protected void finalize() throws Throwable {
 		Global.varycntr--;
 	}
-
 };
 
 /** LazyVary node datastructure 
@@ -80,16 +79,16 @@ public class LazyADTree extends DataCounter{
 	int free_varynodes = 10000;
 	int adnodeptr = 0;
 	int vrnodeptr = 0;
-	ArrayList<Integer> nstates;
 	LazyADNode root;
+	ArrayList<Integer> nstates;
 	ArrayList<LazyADNode> adnodes = new ArrayList<LazyADNode>();
 	ArrayList<LazyVaryNode> varynodes = new ArrayList<LazyVaryNode>();
 	Stack<LazyADNode> adnodebin = new Stack<LazyADNode>();
 	Stack<LazyVaryNode> varynodebin = new Stack<LazyVaryNode>();
-	Stack<Pair<Integer,Integer>> pairbin = new Stack<Pair<Integer,Integer>>();
 	ArrayList<Pair<Integer, Integer> > query = new ArrayList<Pair<Integer,Integer>>();
 	PairComparator pcomp = new PairComparator();
 	MutableInt mutint = new MutableInt();
+	
 	private void wipeVaryNode(LazyVaryNode n) {
 		if(n != null) {
 			varynodebin.push(n);
@@ -155,24 +154,6 @@ public class LazyADTree extends DataCounter{
 			v= varynodes.get(vrnodeptr++);
 		}
 		return v;
-	}
-	
-	private Pair<Integer,Integer> newPair(int left, int right) {
-		Pair<Integer,Integer> p = null;
-		if(pairbin.isEmpty())
-			p = new Pair<Integer,Integer>(left,right);
-		else {
-			p = pairbin.pop();
-			p.setFirst(left);
-			p.setSecond(right);
-		}
-		return p;
-	}
-	
-	private void wipeQuery(ArrayList<Pair<Integer,Integer>> q) {
-		for(Pair<Integer,Integer> p : q)
-			pairbin.push(p);
-		q.clear();
 	}
 	
 	/**returns number of variables*/
@@ -256,10 +237,12 @@ public class LazyADTree extends DataCounter{
 		if((Global.sample++)%100000 == 0)
 			System.out.println("leaves "+Global.leaves+" varynodes "+Global.varycntr+" nodecount "+Global.nodecntr+" varynodebin "+varynodebin.size()+" adnodebin "+adnodebin.size());
 		boolean dosort = false;
-		wipeQuery(query);
+
+		query.clear();
 		for(Pair<Integer,Integer> i : _query)
-    	    query.add(newPair(i.getFirst(),i.getSecond()));
-    	try {
+			query.add(new Pair<Integer,Integer>(i.getFirst(),i.getSecond()));
+		
+		try {
 			if (query.size() == 0)
 				return root.count;
 			for(int x = 0; x < query.size()-1; ++x)
@@ -299,7 +282,7 @@ public class LazyADTree extends DataCounter{
 	int retrieveCount(LazyADNode ad, ArrayList<Pair<Integer, Integer> > _query, MutableInt idx) {
 		while (idx.intValue() >= 0) {
 			//LEAF NODE CODE *************************************
-			if(ad.record_indices.size() > 0 && ad.count > min_count) {
+			if(!ad.record_indices.isEmpty() && ad.count > min_count) {
 					ad.leaf_node = false;
 					ad.record_indices.clear();
 			}

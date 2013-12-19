@@ -42,7 +42,7 @@ public class DiscIndependenceTest extends IndependenceTest {
 	 */
 	@Override
 	public double calcPValue(int x, int y, ArrayList<Integer> z) {
-        int i;
+		int i;
         int xpos = -1;
         int ypos = -1;
         ArrayList<Integer> vars = new ArrayList<Integer>();

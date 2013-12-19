@@ -37,7 +37,7 @@ public class RandomIndependenceStep extends IndependenceStep {
         IndependenceTest itest = null;
         DataCounter ct = null;
         if(adjacency > 3)//TODO MDJ: need this?
-        	ct = new LazyADTree(ds,0);
+        	ct = new LazyADTree(ds,10);
         if(disc)
         	itest = new DiscIndependenceTest(ds, ct);
         else
