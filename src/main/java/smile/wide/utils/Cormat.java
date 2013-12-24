@@ -13,15 +13,18 @@ public class Cormat {
     /** Number of records*/
     int n;
     /** 2d array that holds the correlation matrix */
-    ArrayList<ArrayList<Double> > cm=null;
+    ArrayList<ArrayList<Double> > cm= new ArrayList<ArrayList<Double>>();
+
+    DataSet ds = null;
 
 	/**Constructor
 	 * Using the dataset, calculates the
 	 * correlation matrix
 	 * @param ds
 	 */
-	public Cormat(DataSet ds)
+	public Cormat(DataSet _ds)
 	{
+		ds = _ds;
 	    nvar = ds.getNumberOfVariables();
 	    n = ds.getNumberOfRecords();
 	    boolean cont = true;
@@ -37,40 +40,44 @@ public class Cormat {
 	    	cm.ensureCapacity(nvar);
 	        for (int i = 0; i < nvar; i++)
 	        {
+	        	cm.add(new ArrayList<Double>());
 	        	cm.get(i).ensureCapacity(nvar);
+	        	for(int j=0;j< nvar;++j)
+	        		cm.get(i).add(null);
 	        }
 	        for (int x = 0; x < nvar; x++)
 	        {
 	            cm.get(x).set(x,1.0);
-	            for (int y = x + 1; y < nvar; y++)
-	            {
-	                double sumx2 = 0;
-	                double sumy2 = 0;
-	                double sumxy = 0;
-	                double meanx = ds.getDouble(x, 0);
-	                double meany = ds.getDouble(y, 0);
-	                for (int i = 2; i <= n; i++)
-	                {
-	                    double sweep = ((double) i - 1) / i;
-	                    double deltax = ds.getDouble(x, i - 1) - meanx;
-	                    double deltay = ds.getDouble(y, i - 1) - meany;
-	                    sumx2 += deltax * deltax * sweep;
-	                    sumy2 += deltay * deltay * sweep;
-	                    sumxy += deltax * deltay * sweep;
-	                    meanx += deltax / i;
-	                    meany += deltay / i;
-	                }
-	                double popsdx = Math.sqrt(sumx2 / n);
-	                double popsdy = Math.sqrt(sumy2 / n);
-	                double covxy = sumxy / n;
-	                double rho = covxy / (popsdx * popsdy);
-	                cm.get(x).set(y,rho);
-	                cm.get(y).set(x,rho);
-	            }
 	        }
 	    }
 	}
 
+	double calcEntry(int x, int y) {
+        double sumx2 = 0;
+        double sumy2 = 0;
+        double sumxy = 0;
+        double meanx = ds.getDouble(x, 0);
+        double meany = ds.getDouble(y, 0);
+        for (int i = 2; i <= n; i++)
+        {
+            double sweep = ((double) i - 1) / i;
+            double deltax = ds.getDouble(x, i - 1) - meanx;
+            double deltay = ds.getDouble(y, i - 1) - meany;
+            sumx2 += deltax * deltax * sweep;
+            sumy2 += deltay * deltay * sweep;
+            sumxy += deltax * deltay * sweep;
+            meanx += deltax / i;
+            meany += deltay / i;
+        }
+        double popsdx = Math.sqrt(sumx2 / n);
+        double popsdy = Math.sqrt(sumy2 / n);
+        double covxy = sumxy / n;
+        double rho = covxy / (popsdx * popsdy);
+        cm.get(x).set(y,rho);
+        cm.get(y).set(x,rho);
+		return rho;
+	}
+	
 	/** Returns number of variables
 	 * 
 	 * @return number of variables
@@ -99,8 +106,12 @@ public class Cormat {
 	public double GetRho(int x, int y, ArrayList<Integer> z)
 	{
 	    if (z.size() == 0)
-	    {
-	        return cm.get(x).get(y);
+	    {	
+	    	Double result = cm.get(x).get(y);
+	    	if(result != null)
+	    		return result;
+	    	else
+	    		return calcEntry(x, y);
 	    }
 	    else
 	    {

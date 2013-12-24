@@ -31,7 +31,7 @@ public class DistributedIndependenceStep extends IndependenceStep {
 		conf.setFloat("significance", (float) significance);
 		conf.set("datastorage","/user/mdejongh/datatmp");
 		conf.set("testoutput","/user/mdejongh/testoutput");
-		conf.setInt(RandSeedInputFormat.CONFKEY_SEED_COUNT, 3500);//number of mappers to be run
+		conf.setInt(RandSeedInputFormat.CONFKEY_SEED_COUNT, 2000);//number of mappers to be run
 		conf.setInt(RandSeedInputFormat.CONFKEY_WARMUP_ITER, 100000);
 		String[] args = {};
 		DistributedIndependenceJob job = new DistributedIndependenceJob();

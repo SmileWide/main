@@ -44,7 +44,7 @@ public abstract class IndependenceTest {
 
         MutableDouble pvalyx = new MutableDouble(0);
         HashSet<Integer> sepsetyx = new HashSet<Integer>();
-        //MDJ: my test, if we find one we stop
+        //TODO MDJ: my test, if we find one we stop
         if(pvalxy.doubleValue() == 0)
         	checkCI(pat, card, y, x, pvalyx, sepsetyx, signif);
        
@@ -123,7 +123,7 @@ public abstract class IndependenceTest {
                 for(Integer q : z) {
                 	sepset.add(q.intValue());
                 }
-                //MDJ: my test, just stop if we find one
+                //TODO MDJ: my test, just stop if we find one
                 break;
             }
         }

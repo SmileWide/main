@@ -10,7 +10,9 @@ public class PCTest {
 	{
 		SMILEData ds = new SMILEData();
 		System.out.println("Loading test data");
-		ds.Read("input/Hepar14k.txt");
+		//ds.Read("input/Hepar14k.txt");
+		ds.Read("input/Cpcs179.txt");
+		//ds.Read("input/retention.txt");
 		Pattern pat = new Pattern();
 		PC alg = new PC();
 		//alg.istep = new HadoopIndependenceStep();

@@ -60,7 +60,7 @@ class LazyADNode
 	int max=-1;
 	boolean leaf_node = false;
 	ArrayList<LazyVaryNode> varynodes = new ArrayList<LazyVaryNode>();
-	ArrayList<Integer> record_indices = new ArrayList<Integer>();
+	ArrayList<Integer> record_indices = null;
 	protected void finalize() throws Throwable {
 		Global.nodecntr--;
 	}
@@ -73,6 +73,7 @@ class LazyADNode
  * @author m.a.dejongh@gmail.com
  */
 public class LazyADTree extends DataCounter{
+	int max_count = 0;
 	int min_count = 0;
 	int nvar;
 	int free_adnodes = 10000;
@@ -88,7 +89,7 @@ public class LazyADTree extends DataCounter{
 	ArrayList<Pair<Integer, Integer> > query = new ArrayList<Pair<Integer,Integer>>();
 	PairComparator pcomp = new PairComparator();
 	MutableInt mutint = new MutableInt();
-	
+	Runtime runtime = Runtime.getRuntime();
 	private void wipeVaryNode(LazyVaryNode n) {
 		if(n != null) {
 			varynodebin.push(n);
@@ -136,6 +137,8 @@ public class LazyADTree extends DataCounter{
 			}
 			a = adnodes.get(adnodeptr++);
 		}
+		if(min_count > 0)
+			a.record_indices = new ArrayList<Integer>();
 		a.max = var;
 		return a;
 	}
@@ -235,7 +238,7 @@ public class LazyADTree extends DataCounter{
 	public int getCount(ArrayList<Pair<Integer, Integer> > _query)
 	{
 		if((Global.sample++)%100000 == 0)
-			System.out.println("leaves "+Global.leaves+" varynodes "+Global.varycntr+" nodecount "+Global.nodecntr+" varynodebin "+varynodebin.size()+" adnodebin "+adnodebin.size());
+			System.out.println("leaves "+Global.leaves+" varynodes "+Global.varycntr+" nodecount "+Global.nodecntr+" varynodebin "+varynodebin.size()+" adnodebin "+adnodebin.size()+" memory "+(runtime.totalMemory() - runtime.freeMemory())/(1024*1024)+"/"+runtime.totalMemory()/(1024*1024)+" of "+runtime.maxMemory()/(1024*1024));
 		boolean dosort = false;
 
 		query.clear();
@@ -282,23 +285,28 @@ public class LazyADTree extends DataCounter{
 	int retrieveCount(LazyADNode ad, ArrayList<Pair<Integer, Integer> > _query, MutableInt idx) {
 		while (idx.intValue() >= 0) {
 			//LEAF NODE CODE *************************************
-			if(!ad.record_indices.isEmpty() && ad.count > min_count) {
-					ad.leaf_node = false;
+			if(ad.record_indices != null && !ad.record_indices.isEmpty() && ad.count > min_count) {
 					ad.record_indices.clear();
+					ad.record_indices = null;
 			}
-			if(!ad.leaf_node && ad.count > 0 && ad.count <= min_count) {
+			if(ad.count > max_count) {
+				ad.leaf_node = false;
+		}
+			if(!ad.leaf_node && ad.count > 0 && ad.count <= max_count) {
 				ad.leaf_node = true;
 				if(!ad.varynodes.isEmpty()) {
 					for(LazyVaryNode v: ad.varynodes) {
 						wipeVaryNode(v);
 					}
 					ad.varynodes.clear();
-					//ad.varynodes = null;
 				}
 			}
 			if(ad.leaf_node) {
 				Global.leaves++;
-				return leafCount(_query,ad.record_indices);
+				if(ad.count <= min_count && ad.record_indices != null)
+					return leafCount(_query,ad.record_indices);
+				else
+					return basicCount(_query);
 			}
 			//END LEAF NODE CODE *********************************
 			if (ad.varynodes.isEmpty()) {
@@ -366,7 +374,7 @@ public class LazyADTree extends DataCounter{
 				if (j <= idx) {
 					tmpad.count++;
 					//LEAF NODE CODE *************************************
-					if(tmpad.count <= min_count)
+					if(tmpad.count <= min_count && tmpad.record_indices != null)
 						tmpad.record_indices.add(i);
 					//END LEAF NODE CODE *********************************
 				}
@@ -398,4 +406,23 @@ public class LazyADTree extends DataCounter{
 		}
 		return count;
 	}
+
+	int basicCount(ArrayList<Pair<Integer, Integer> > _query) {
+		int count = 0;
+		for(int  i=0;i<root.count;++i) {
+			boolean cnt = true;
+			for(Pair<Integer,Integer> p : _query) {
+				int var = p.getFirst();
+				int val = p.getSecond();
+				if(val != ds.getInt(var, i)) {
+					cnt = false;
+					break;
+				}
+			}
+			if(cnt)
+				count++;
+		}
+		return count;
+	}
+
 }

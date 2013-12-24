@@ -100,8 +100,8 @@ public class SMILEData extends DataSet {
 	}
 	@Override
 	public boolean isDiscrete(int column) {
-		// TODO Auto-generated method stub
-		return true;
+		// TODO MDJ: need access to SMILE isDiscrete function to be able to do both continuous and discrete data
+		return false;//true;
 	}
 	@Override
 	public String[] getStateNames(int column) {

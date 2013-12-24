@@ -7,8 +7,6 @@ import java.util.Set;
 
 import smile.wide.data.DataSet;
 import smile.wide.data.SMILEData;
-import smile.wide.utils.LazyADTree;
-import smile.wide.utils.Pair;
 import smile.wide.utils.Pattern;
 
 /** Basic Implementation of the PC algorithm
@@ -291,8 +289,8 @@ public class PC {
 	public static void main(String args[])
 	{
 		SMILEData ds = new SMILEData();
-		ds.Read("../input/Hepar14k.txt");
-//		ds.Read("../input/Cpcs179.txt");
+//		ds.Read("../input/Hepar14k.txt");
+		ds.Read("../input/Cpcs179.txt");
 		Pattern pat = new Pattern();
 		PC alg = new PC();
 		//alg.istep = new HadoopIndependenceStep();
