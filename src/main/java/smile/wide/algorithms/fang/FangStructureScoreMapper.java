@@ -30,7 +30,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
 
-import smile.wide.utils.PairDoubleWritable;
+import smile.wide.hadoop.io.PairDoubleWritable;
 
 /**
  * Mapper

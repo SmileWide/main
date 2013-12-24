@@ -45,8 +45,9 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import smile.wide.hadoop.io.PairDoubleWritable;
+import smile.wide.hadoop.io.StructureInputFormat;
 import smile.wide.utils.Pair;
-import smile.wide.utils.PairDoubleWritable;
 import smile.wide.utils.Pattern;
 import smile.wide.utils.Pattern.EdgeType;
 

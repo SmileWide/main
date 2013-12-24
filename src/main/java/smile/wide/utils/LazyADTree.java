@@ -9,13 +9,6 @@ import org.apache.commons.lang.mutable.MutableInt;
 
 import smile.wide.data.DataSet;
 
-class Global {
-	public static int sample = 0;
-	public static int varycntr = 0;
-	public static int nodecntr = 0;
-	public static int leaves = 0;
-}
-
 /** Comparator class for Pair objects 
  * allows for sorting of Pairs by
  * their first element
@@ -38,9 +31,6 @@ class LazyVaryNode
 {
 	/**array with adnodes*/
 	ArrayList<LazyADNode> adnodes = new ArrayList<LazyADNode>();
-	protected void finalize() throws Throwable {
-		Global.varycntr--;
-	}
 };
 
 /** LazyVary node datastructure 
@@ -61,9 +51,6 @@ class LazyADNode
 	boolean leaf_node = false;
 	ArrayList<LazyVaryNode> varynodes = new ArrayList<LazyVaryNode>();
 	ArrayList<Integer> record_indices = null;
-	protected void finalize() throws Throwable {
-		Global.nodecntr--;
-	}
 };
 
 /**ADTree class
@@ -90,6 +77,7 @@ public class LazyADTree extends DataCounter{
 	PairComparator pcomp = new PairComparator();
 	MutableInt mutint = new MutableInt();
 	Runtime runtime = Runtime.getRuntime();
+	
 	private void wipeVaryNode(LazyVaryNode n) {
 		if(n != null) {
 			varynodebin.push(n);
@@ -130,7 +118,6 @@ public class LazyADTree extends DataCounter{
 		if(!adnodebin.isEmpty())
 			a = adnodebin.pop();
 		else {
-			Global.nodecntr++;
 			if(adnodeptr==free_adnodes) {
 				addADNodes(10000);
 				free_adnodes+=10000;
@@ -149,7 +136,6 @@ public class LazyADTree extends DataCounter{
 			v = varynodebin.pop();
 		}
 		else {
-			Global.varycntr++;
 			if(vrnodeptr==free_varynodes) {
 				addVaryNodes(10000);
 				free_varynodes +=10000;
@@ -214,6 +200,7 @@ public class LazyADTree extends DataCounter{
 	void create(int mc)
 	{
 		min_count = mc;
+		max_count = mc;
 		nvar = ds.getNumberOfVariables();
 		nstates = new ArrayList<Integer>();
 	    for (int j = 0; j < nvar; j++)
@@ -237,8 +224,6 @@ public class LazyADTree extends DataCounter{
 	 * */
 	public int getCount(ArrayList<Pair<Integer, Integer> > _query)
 	{
-		if((Global.sample++)%100000 == 0)
-			System.out.println("leaves "+Global.leaves+" varynodes "+Global.varycntr+" nodecount "+Global.nodecntr+" varynodebin "+varynodebin.size()+" adnodebin "+adnodebin.size()+" memory "+(runtime.totalMemory() - runtime.freeMemory())/(1024*1024)+"/"+runtime.totalMemory()/(1024*1024)+" of "+runtime.maxMemory()/(1024*1024));
 		boolean dosort = false;
 
 		query.clear();
@@ -302,7 +287,6 @@ public class LazyADTree extends DataCounter{
 				}
 			}
 			if(ad.leaf_node) {
-				Global.leaves++;
 				if(ad.count <= min_count && ad.record_indices != null)
 					return leafCount(_query,ad.record_indices);
 				else
@@ -387,7 +371,7 @@ public class LazyADTree extends DataCounter{
 	 * have kids, we recalculate when we need it
 	 * @param query
 	 * @param indices
-	 * @return
+	 * @return count
 	 */
 	int leafCount(ArrayList<Pair<Integer, Integer> > _query, ArrayList<Integer> indices) {
 		int count = 0;
@@ -406,7 +390,11 @@ public class LazyADTree extends DataCounter{
 		}
 		return count;
 	}
-
+	
+	/** function for counting using the dataset
+	 * @param query
+	 * @return count
+	 */
 	int basicCount(ArrayList<Pair<Integer, Integer> > _query) {
 		int count = 0;
 		for(int  i=0;i<root.count;++i) {

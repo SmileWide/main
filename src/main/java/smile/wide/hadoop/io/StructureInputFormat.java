@@ -1,4 +1,4 @@
-package smile.wide.algorithms.fang;
+package smile.wide.hadoop.io;
 
 import java.io.DataInput;
 import java.io.DataOutput;
