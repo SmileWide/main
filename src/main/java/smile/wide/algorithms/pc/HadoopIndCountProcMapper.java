@@ -56,9 +56,6 @@ public class HadoopIndCountProcMapper extends Mapper<LongWritable, Text, Text, T
 			variables.add(assignment[0]);
 			values.add(assignment[1]);
 		}
-		//generateTestCombos(context,variables,values,pair);
-		//NEW VERSION OF CODE, NO NEED TO GENERATE ALL POSSIBLE COMBINATIONS
-
 		for(int x=0;x<variables.size();++x) {
 			if(x==0) {
 				mykey = variables.get(x);
@@ -70,40 +67,5 @@ public class HadoopIndCountProcMapper extends Mapper<LongWritable, Text, Text, T
 		}
 		myvalue+="="+pair[1];
 		context.write(new Text(mykey), new Text(myvalue));		
-	}
-	
-	void generateTestCombos(Context context, ArrayList<String> variables,ArrayList<String> values, String[] pair) throws IOException, InterruptedException {
-		/*from the created counts we generate all possible combinations of
-		* (x,y,Z), ((x,y,Z),count)
-		*/
-		for(int x=0;x<variables.size();++x) {
-			int xx = Integer.decode(variables.get(x).replace("v", ""));
-			for(int y=0;y<variables.size();++y) {
-				int yy = Integer.decode(variables.get(y).replace("v", ""));
-				if(x!=y && pat.getEdge(xx, yy) != Pattern.EdgeType.None) {//check if x and y are connected?
-					mykey = variables.get(x) + "," + variables.get(y);
-					myvalue = values.get(x) + "," + values.get(y);
-					boolean all_connected = true;
-					if(variables.size()>2) {
-						//check if all variables in Z are connected to x
-						for(int z=0;z<variables.size();++z) {
-							if(z!=x && z!=y) {
-								int zz=Integer.decode(variables.get(z).replace("v", ""));;
-								if(pat.getEdge(xx, zz) == Pattern.EdgeType.None) {
-									all_connected = false;
-									break;
-								}
-								mykey += "," + variables.get(z);
-								myvalue += "," + values.get(z);
-							}
-						}
-					}
-					myvalue+= "=" + pair[1];
-					if(all_connected)
-						context.write(new Text(mykey), new Text(myvalue));
-				}
-			}
-		}
-		
 	}
 }

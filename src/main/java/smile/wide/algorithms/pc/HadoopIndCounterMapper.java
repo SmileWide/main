@@ -55,50 +55,7 @@ public class HadoopIndCounterMapper extends Mapper<LongWritable, Text, Text, VIn
 	protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException  {
 		record = value.toString();
 		String[] values = record.split(",|\t| ");
-		//HERE PARSE RECORD AND GENERATE ALL POSSIBLE COMBOS
-		//ArrayList<Pair<Integer,String>> set= new ArrayList<Pair<Integer,String>>();
-		//powerset(context,set,values,0,maxAdjacency+2);//not the most efficient way to do it, but works for now
 		setGenerator(context, values, maxAdjacency);
-	}
-	
-	/**Powerset generator
-	 * 
-	 * @param context used for outputting MapReduce Key-Value pair
-	 * @param set current subset of powerset
-	 * @param vals complete array
-	 * @param vctr counter in array
-	 * @param max max size of subset
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	void powerset(Context context, ArrayList<Pair<Integer,String>> set, String[] vals, int vctr, int max) throws IOException, InterruptedException {
-		String assignment = "";
-		if(set.size()==max) {//now only generates sets of size max (which is all PC needs)
-			//have to search to see if nodes from one connected component
-			Set<Integer> nodes = new HashSet<Integer>();
-			Set<Integer> marked = new HashSet<Integer>();
-			for(Pair<Integer,String> p : set) {
-				nodes.add(p.getFirst());
-			}
-			depthFirstSearch(nodes,marked,nodes.iterator().next());
-			if(nodes.size() == marked.size()) {
-				for(int x=0; x<set.size();++x) {
-					if(assignment.length()>0) {
-						assignment+="+v"+set.get(x).getFirst()+"="+set.get(x).getSecond();
-					}
-					else
-						assignment="v"+set.get(x).getFirst()+"="+set.get(x).getSecond();
-				}
-				context.write(new Text(assignment), one);
-			}
-		}
-		if(set.size()+1<=max) {
-			for(int x=vctr;x<vals.length;++x) {
-				set.add(new Pair<Integer,String>(x,vals[x]));
-				powerset(context,set,vals,x+1,max);
-				set.remove(set.size()-1);
-			}
-		}
 	}
 	
 	void depthFirstSearch(Set<Integer> set, Set<Integer> marked, int current) {
