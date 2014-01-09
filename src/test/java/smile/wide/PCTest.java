@@ -1,6 +1,5 @@
 package smile.wide;
 
-import smile.wide.algorithms.pc.HadoopIndependenceStep;
 import smile.wide.algorithms.pc.PC;
 import smile.wide.data.SMILEData;
 import smile.wide.utils.Pattern;
@@ -15,7 +14,6 @@ public class PCTest {
 		//ds.Read("input/retention.txt");
 		Pattern pat = new Pattern();
 		PC alg = new PC();
-		//alg.istep = new HadoopIndependenceStep();
 		alg.maxAdjacency = 8;
 		alg.significance = 0.05;
 		//Test the PC class with same dataset. print out result
