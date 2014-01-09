@@ -1,6 +1,8 @@
 package smile.wide.utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import smile.wide.data.DataSet;
 
 /** Correlation Matrix datastructure 
@@ -13,9 +15,11 @@ public class Cormat {
     /** Number of records*/
     int n;
     /** 2d array that holds the correlation matrix */
-    ArrayList<ArrayList<Double> > cm= new ArrayList<ArrayList<Double>>();
-
+    ArrayList<ArrayList<Double> > cm = new ArrayList<ArrayList<Double>>();
+    /** data structure for Dynamic programming implementation */
+    ArrayList<ArrayList<HashMap<ArrayList<Integer>,Double>>> dpdata = new ArrayList<ArrayList<HashMap<ArrayList<Integer>,Double>>>();
     DataSet ds = null;
+    Runtime runtime = Runtime.getRuntime();
 
 	/**Constructor
 	 * Using the dataset, calculates the
@@ -49,7 +53,10 @@ public class Cormat {
 	        {
 	            cm.get(x).set(x,1.0);
 	        }
-	    }
+	        
+	        //init 2 dimensions of dpdata
+	        cleanDPCache();
+	   }
 	}
 
 	double calcEntry(int x, int y) {
@@ -115,6 +122,16 @@ public class Cormat {
 	    }
 	    else
 	    {
+	    	//Dynamic Programming
+	    	
+	        if(dpdata.get(x).get(y).containsKey(z)) {
+	    		return dpdata.get(x).get(y).get(z);
+	        }
+	    	if(dpdata.get(y).get(x).containsKey(z)) {
+	    		return dpdata.get(y).get(x).get(z);
+	    	}
+	    	//End Dynamic Programming
+	    	
 	    	ArrayList<Integer> newz = new ArrayList<Integer>();
 	    	for(Integer i : z) {
 	    	    newz.add(new Integer(i));
@@ -124,7 +141,39 @@ public class Cormat {
 	        double rho_xy = GetRho(x, y, newz);
 	        double rho_xz0 = GetRho(x, z0, newz);
 	        double rho_yz0 = GetRho(y, z0, newz);
-	        return (rho_xy - rho_xz0 * rho_yz0) / (Math.sqrt(1 - rho_xz0 * rho_xz0) * Math.sqrt(1 - rho_yz0 * rho_yz0));
+	        double the_rho = (rho_xy - rho_xz0 * rho_yz0) / (Math.sqrt(1 - rho_xz0 * rho_xz0) * Math.sqrt(1 - rho_yz0 * rho_yz0));
+	        
+	        //Storage for Dynamic Programming
+	        try {
+	        	dpdata.get(x).get(y).put(z, the_rho);
+	        }
+	        catch (OutOfMemoryError e) {
+	        	cleanDPCache();
+	        }
+	        
+	        //memory check
+	        double mm =  runtime.maxMemory();
+	        double tm = runtime.totalMemory();
+	        double fm = runtime.freeMemory();
+	        double usage = (tm-fm)/mm;
+	        if(usage > 0.75)
+	        	cleanDPCache();
+	        
+	        return the_rho;
 	    }
+	}
+	
+	private void cleanDPCache() {
+    	dpdata.clear();
+        //init 2 dimensions of dpdata
+    	dpdata.ensureCapacity(nvar);
+        for (int i = 0; i < nvar; i++)
+        {
+        	dpdata.add(new ArrayList<HashMap<ArrayList<Integer>,Double>>());
+        	dpdata.get(i).ensureCapacity(nvar);
+        	for(int j=0;j< nvar;++j)
+        		dpdata.get(i).add(new HashMap<ArrayList<Integer>,Double>());
+        }
+		
 	}
 }

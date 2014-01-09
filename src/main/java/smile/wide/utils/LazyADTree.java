@@ -252,6 +252,16 @@ public class LazyADTree extends DataCounter{
 				idx.setValue(query.size() - 1);
 				count = retrieveCount(root, query, idx);
 				assert(count >= 0);
+
+				//temp
+		        double mm =  runtime.maxMemory();
+		        double tm = runtime.totalMemory();
+		        double fm = runtime.freeMemory();
+		        double usage = (tm-fm)/mm;
+		        if(usage > 0.75) {
+					kill();
+					create(min_count);
+		        }
 				return count;
 			}
 		}
