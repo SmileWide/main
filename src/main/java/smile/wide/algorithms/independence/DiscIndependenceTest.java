@@ -119,6 +119,10 @@ public class DiscIndependenceTest extends IndependenceTest {
         {
             nconf *= nstates.get(i);
         }
+        //check if 10 * nconf < nsamples (Spirtes & Glymour)
+        if(10*nconf >= ds.getNumberOfRecords()) {
+        	return -1.0;
+        }
         // main loop
         int nvars = vars.size();
         double g2 = 0;
@@ -268,6 +272,7 @@ public class DiscIndependenceTest extends IndependenceTest {
         g2 *= 2;
         if (dof <= 0)
             dof = 1;
-    	return (double) SMILEMath.gammq((double) (0.5 * dof), (double) (0.5 * g2));
+        double pval = SMILEMath.gammq((double) (0.5 * dof), (double) (0.5 * g2));
+    	return pval;
 	}
 }
