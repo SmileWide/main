@@ -1,5 +1,8 @@
 package smile.wide.algorithms.independence;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -116,6 +119,13 @@ public abstract class IndependenceTest {
             }
             double pval;
             pval = calcPValue(x, y, z);
+/*
+            try {
+				mlg.write(x +", "+y+", "+z.size()+", "+pval);
+			} catch (IOException e) {
+				System.exit(-1);
+			}
+*/
             if (pval > signif && pval > maxpval.doubleValue())
             {
                 maxpval.setValue(pval);
@@ -192,4 +202,22 @@ public abstract class IndependenceTest {
      * @return p-value of independence test
      */
     protected abstract double calcPValue(int x, int y, ArrayList<Integer> z);
+
+ //   mylogger mlg = new mylogger();
+}
+
+
+class mylogger {
+	BufferedWriter w = null; 
+	void write(String s) throws IOException {
+		if(w == null) {
+			w = new BufferedWriter(new FileWriter("pvaldata.txt"));
+			w.write("x, y, zsize, pval\n");
+		}
+		w.write(s+"\n");
+		w.flush();
+	}
+	protected void finalize() throws IOException {
+		w.close();
+	}
 }
