@@ -7,6 +7,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.mutable.MutableDouble;
+
 import smile.wide.data.DataSet;
 import smile.wide.utils.DataCounter;
 import smile.wide.utils.LazyADTree;
@@ -41,7 +43,7 @@ public class DiscIndependenceTest extends IndependenceTest {
 	 * @param z list with conditioning variables	
 	 */
 	@Override
-	public double calcPValue(int x, int y, ArrayList<Integer> z) {
+	public double calcPValue(int x, int y, ArrayList<Integer> z, MutableDouble mi) {
 		int i;
         int xpos = -1;
         int ypos = -1;
@@ -273,6 +275,9 @@ public class DiscIndependenceTest extends IndependenceTest {
         if (dof <= 0)
             dof = 1;
         double pval = SMILEMath.gammq((double) (0.5 * dof), (double) (0.5 * g2));
+        //Mutual Information calculation
+        double m_inf = g2 / (2.0 * ds.getNumberOfRecords() * Math.log(2.0));
+        mi.setValue(m_inf);
     	return pval;
 	}
 }

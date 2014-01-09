@@ -2,6 +2,8 @@ package smile.wide.algorithms.independence;
 
 import java.util.ArrayList;
 
+import org.apache.commons.lang.mutable.MutableDouble;
+
 import smile.wide.data.DataSet;
 import smile.wide.utils.Cormat;
 import smile.wide.utils.SMILEMath;
@@ -31,7 +33,7 @@ public class ContIndependenceTest extends IndependenceTest {
 	 * @param z set of conditioning variables
 	 */
 	@Override
-	public double calcPValue(int x, int y, ArrayList<Integer> z) {
+	public double calcPValue(int x, int y, ArrayList<Integer> z, MutableDouble mi) {
         // first calculate the partial correlation coefficient
         int z_size = z.size();
         double rho = cm.GetRho(x, y, z);

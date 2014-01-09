@@ -39,17 +39,19 @@ public abstract class IndependenceTest {
 	 * @param signif significance level to be used for the test
 	 * @return true: independent, false: not independent.
 	 */
-    public boolean findCI(Pattern pat, int card, int x, int y, HashSet<Integer> sepset, double signif)
+    public boolean findCI(Pattern pat, int card, int x, int y, HashSet<Integer> sepset, double signif, MutableDouble mi)
     {
         MutableDouble pvalxy = new MutableDouble(0);
+        MutableDouble dummy = new MutableDouble(0);
+        
         HashSet<Integer> sepsetxy = new HashSet<Integer>();
-        checkCI(pat, card, x, y, pvalxy, sepsetxy, signif);
+        checkCI(pat, card, x, y, pvalxy, sepsetxy, signif,mi);
 
         MutableDouble pvalyx = new MutableDouble(0);
         HashSet<Integer> sepsetyx = new HashSet<Integer>();
         //TODO MDJ: my test, if we find one we stop
         if(pvalxy.doubleValue() == 0)
-        	checkCI(pat, card, y, x, pvalyx, sepsetyx, signif);
+        	checkCI(pat, card, y, x, pvalyx, sepsetyx, signif, dummy);
        
         if (pvalxy.doubleValue() > 0 || pvalyx.doubleValue() > 0)
         {
@@ -81,7 +83,7 @@ public abstract class IndependenceTest {
 	 * @param sepset empty list to be filled with sepset of x and y
 	 * @param signif significance level to be used for the test
      */
-    protected void checkCI(Pattern pat, int card, int x, int y, MutableDouble maxpval, HashSet<Integer> sepset, double signif)
+    protected void checkCI(Pattern pat, int card, int x, int y, MutableDouble maxpval, HashSet<Integer> sepset, double signif, MutableDouble mi)
     {
         int nvar = ds.getNumberOfVariables();//number of variables in dataset
 
@@ -118,7 +120,7 @@ public abstract class IndependenceTest {
                 }
             }
             double pval;
-            pval = calcPValue(x, y, z);
+            pval = calcPValue(x, y, z, mi);
 /*
             try {
 				mlg.write(x +", "+y+", "+z.size()+", "+pval);
@@ -201,7 +203,7 @@ public abstract class IndependenceTest {
      * @param z list of conditioning variables
      * @return p-value of independence test
      */
-    protected abstract double calcPValue(int x, int y, ArrayList<Integer> z);
+    protected abstract double calcPValue(int x, int y, ArrayList<Integer> z, MutableDouble mi);
 
  //   mylogger mlg = new mylogger();
 }
