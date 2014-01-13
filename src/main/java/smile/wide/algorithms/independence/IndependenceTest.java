@@ -41,21 +41,19 @@ public abstract class IndependenceTest {
 	 */
     public boolean findCI(Pattern pat, int card, int x, int y, HashSet<Integer> sepset, double signif, MutableDouble mi)
     {
-        MutableDouble pvalxy = new MutableDouble(0);
+        MutableDouble pvalxy = new MutableDouble(init_extreme_value());
         MutableDouble dummy = new MutableDouble(0);
         
         HashSet<Integer> sepsetxy = new HashSet<Integer>();
         checkCI(pat, card, x, y, pvalxy, sepsetxy, signif,mi);
 
-        MutableDouble pvalyx = new MutableDouble(0);
+        MutableDouble pvalyx = new MutableDouble(init_extreme_value());
         HashSet<Integer> sepsetyx = new HashSet<Integer>();
-        //TODO MDJ: my test, if we find one we stop
-        if(pvalxy.doubleValue() == 0)
-        	checkCI(pat, card, y, x, pvalyx, sepsetyx, signif, dummy);
+       	checkCI(pat, card, y, x, pvalyx, sepsetyx, signif, dummy);
        
-        if (pvalxy.doubleValue() > 0 || pvalyx.doubleValue() > 0)
+        if (pvalxy.doubleValue() != init_extreme_value() || pvalyx.doubleValue() != init_extreme_value())
         {
-            if (pvalxy.doubleValue() > pvalyx.doubleValue())
+            if (better(pvalxy.doubleValue(),pvalyx.doubleValue()))
             {
                 for(Integer q: sepsetxy)
                 	sepset.add(q);
@@ -123,20 +121,18 @@ public abstract class IndependenceTest {
             pval = calcPValue(x, y, z, mi);
 /*
             try {
-				mlg.write(x +", "+y+", "+z.size()+", "+pval);
+				mlg.write(x +", "+y+", "+z.size()+", "+pval+", "+mi.doubleValue());
 			} catch (IOException e) {
 				System.exit(-1);
 			}
-*/
-            if (pval > signif && pval > maxpval.doubleValue())
+//*/
+            if(compareResult(pval,signif,maxpval.doubleValue()))
             {
                 maxpval.setValue(pval);
                 sepset.clear();
                 for(Integer q : z) {
                 	sepset.add(q.intValue());
                 }
-                //TODO MDJ: my test, just stop if we find one
-                break;
             }
         }
     }
@@ -205,7 +201,16 @@ public abstract class IndependenceTest {
      */
     protected abstract double calcPValue(int x, int y, ArrayList<Integer> z, MutableDouble mi);
 
- //   mylogger mlg = new mylogger();
+    protected boolean compareResult(double pval, double significance, double extreme_value) {
+    	return pval > significance && pval > extreme_value;
+    }
+    protected double init_extreme_value() {
+    	return 0.0;
+    }
+    protected boolean better(double left, double right) {
+    	return left > right;
+    }
+    //mylogger mlg = new mylogger();
 }
 
 
@@ -214,7 +219,7 @@ class mylogger {
 	void write(String s) throws IOException {
 		if(w == null) {
 			w = new BufferedWriter(new FileWriter("pvaldata.txt"));
-			w.write("x, y, zsize, pval\n");
+			w.write("x, y, zsize, pval, mi\n");
 		}
 		w.write(s+"\n");
 		w.flush();
@@ -222,4 +227,5 @@ class mylogger {
 	protected void finalize() throws IOException {
 		w.close();
 	}
+
 }
