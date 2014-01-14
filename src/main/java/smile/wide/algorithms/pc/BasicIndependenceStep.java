@@ -17,6 +17,7 @@ import smile.wide.algorithms.independence.ContIndependenceTest;
 import smile.wide.algorithms.independence.DiscIndependenceTest;
 import smile.wide.algorithms.independence.DiscMITest;
 import smile.wide.algorithms.independence.IndependenceTest;
+import smile.wide.algorithms.labelpropagation.LProp;
 import smile.wide.data.DataSet;
 import smile.wide.utils.Pattern;
 import smile.wide.utils.PlainDataCounter;
@@ -71,7 +72,6 @@ public class BasicIndependenceStep extends IndependenceStep {
         int card = 0;
         while (true)
         {
-//        	System.out.println(nodes);
         	int counter=0;
             for (int x = 0; x < nvar; x++)
             {
@@ -128,7 +128,14 @@ public class BasicIndependenceStep extends IndependenceStep {
 			System.out.println("Removed " + counter + " edges this iteration!");
 			//sort node_array and nodes
 			Collections.sort(nodes, new MIComparator(node_array));
-			//save MI matrix to csv file
+
+			//calc clusters
+			LProp lp = new LProp();
+			ArrayList<Integer> clusters = new ArrayList<Integer>();
+			lp.CalcClusters(clusters,mi_array);
+			System.out.println(clusters);
+			
+			//save MI matrix to csv file (need format that allows writing of cluster ids)
 			BufferedWriter w;
 			try {
 				w = new BufferedWriter(new FileWriter("MImatrix_nvar"+nvar+"_"+card+".csv"));
@@ -150,7 +157,8 @@ public class BasicIndependenceStep extends IndependenceStep {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-            card++;
+
+			card++;
             if (card > nvar - 2 || card > maxAdjacency)
             {
                 break;
