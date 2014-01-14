@@ -15,12 +15,10 @@ import java.util.Set;
 import org.apache.commons.lang.mutable.MutableDouble;
 import smile.wide.algorithms.independence.ContIndependenceTest;
 import smile.wide.algorithms.independence.DiscIndependenceTest;
-import smile.wide.algorithms.independence.DiscMITest;
 import smile.wide.algorithms.independence.IndependenceTest;
 import smile.wide.algorithms.labelpropagation.LProp;
 import smile.wide.data.DataSet;
 import smile.wide.utils.Pattern;
-import smile.wide.utils.PlainDataCounter;
 
 /**
  * @author m.a.dejongh@gmail.com
@@ -30,7 +28,6 @@ public class BasicIndependenceStep extends IndependenceStep {
 
 	class MIComparator implements Comparator<Integer> {
 		public ArrayList<Double> mi_values;
-
 		MIComparator(ArrayList<Double> m) {
 			mi_values = m;
 		}
@@ -48,7 +45,6 @@ public class BasicIndependenceStep extends IndependenceStep {
         
         if(disc) {
         	itest = new DiscIndependenceTest(ds,null);
-        	//itest = new DiscMITest(ds,null);
         }
         else {
         	itest = new ContIndependenceTest(ds);
@@ -68,37 +64,28 @@ public class BasicIndependenceStep extends IndependenceStep {
         		mi_array.get(x).add(0.0);
         	}
         }
+        
         // find conditional independencies
         int card = 0;
-        while (true)
-        {
+        MutableDouble mi = new MutableDouble(0.0);
+
+        //for MI clusters
+        LProp lp = new LProp();
+		ArrayList<Integer> clusters = new ArrayList<Integer>();
+
+        while (true) {
         	int counter=0;
-            for (int x = 0; x < nvar; x++)
-            {
+            for (int x = 0; x < nvar; x++) {
             	int xx = nodes.get(x);
-            	int xcnt=0;
-            	for(int i=0;i<nvar;++i) {
-            		if(i!= xx && pat.getEdge(xx, i) != Pattern.EdgeType.None)
-            			xcnt++;
-            	}
-            	for (int y = x + 1; y < nvar; y++)
-                {
+            	for (int y = x + 1; y < nvar; y++) {
                 	int yy = nodes.get(y);
                 	
                 	if (pat.getEdge(xx, yy) == Pattern.EdgeType.None && pat.getEdge(yy, xx) == Pattern.EdgeType.None) {
                         continue;
                     }
-
-                	int ycnt=0;
-                	for(int i=0;i<nvar;++i) {
-                		if(i!=yy && pat.getEdge(yy, i) != Pattern.EdgeType.None)
-                			ycnt++;
-                	}
-                	
                     HashSet<Integer> sepset= new HashSet<Integer>();
-                    MutableDouble mi = new MutableDouble(0.0);
-                    if (itest.findCI(pat, card, xx, yy, sepset, significance, mi))
-                    {
+                    mi.setValue(0.0);
+                    if (itest.findCI(pat, card, xx, yy, sepset, significance, mi, clusters)) {
                     	if(card > 0) {
                     		//decrease node MI
                     		node_array.set(xx, node_array.get(xx) - mi_array.get(xx).get(yy));
@@ -130,41 +117,40 @@ public class BasicIndependenceStep extends IndependenceStep {
 			Collections.sort(nodes, new MIComparator(node_array));
 
 			//calc clusters
-			LProp lp = new LProp();
-			ArrayList<Integer> clusters = new ArrayList<Integer>();
 			lp.CalcClusters(clusters,mi_array);
 			System.out.println(clusters);
 			
 			//save MI matrix to csv file (need format that allows writing of cluster ids)
-			BufferedWriter w;
+			BufferedWriter w,v;
 			try {
-				w = new BufferedWriter(new FileWriter("MImatrix_nvar"+nvar+"_"+card+".csv"));
+				w = new BufferedWriter(new FileWriter("mi_network_"+nvar+"_"+card+".vna"));
+				v = new BufferedWriter(new FileWriter("edge_network_"+nvar+"_"+card+".vna"));
+				w.write("*node data\nID cluster\n");
+				v.write("*node data\nID cluster\n");
+				for(int z=0;z<nvar;++z) {
+					w.write("v"+z+" "+clusters.get(z)+"\n");
+					v.write("v"+z+" "+clusters.get(z)+"\n");
+				}
+				w.write("*tie data\nfrom to strength\n");
+				v.write("*tie data\nfrom to strength\n");
 				for(int i=0;i<nvar;++i) {
-					if(i==0) {
-						for(int z=0;z<nvar;++z) {
-							w.write(";v"+z);
-						}
-						w.write("\n");
-					}
-					w.write("v"+i);
 					for(int j=0;j<nvar;++j) {
-						w.write(";"+mi_array.get(i).get(j));
+						if(mi_array.get(i).get(j) > 0.0)
+							w.write("v"+i+" v"+j+" "+mi_array.get(i).get(j)+"\n");
+						if(pat.getEdge(i, j)!=Pattern.EdgeType.None)
+							v.write("v"+i+" v"+j+" 1.0\n");
 					}
-					w.write("\n");
 				}
 				w.close();
+				v.close();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
 			card++;
-            if (card > nvar - 2 || card > maxAdjacency)
-            {
+            if (card > nvar - 2 || card > maxAdjacency) {
                 break;
             }
         }
-
 	}
-
 }

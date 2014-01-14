@@ -10,6 +10,8 @@ import smile.wide.utils.DataCounter;
 import smile.wide.utils.LazyADTree;
 import smile.wide.utils.Pair;
 
+//CURRENTLY DOESN'T WORK, MI needs to be compared differently than p-values
+
 /** Independence test for continuous data 
  * (Assumes Gaussian distributions)
  * Is initialized with a DataSet

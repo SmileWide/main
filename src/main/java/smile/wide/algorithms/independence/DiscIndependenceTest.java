@@ -54,37 +54,30 @@ public class DiscIndependenceTest extends IndependenceTest {
         // make sure the variables are ordered in their index
         // keep the position of x and y
         int prev = -1;
-        for (i = 0; i < z.size(); i++)
-        {
+        for (i = 0; i < z.size(); i++) {
             int tmpz = z.get(i);
-            if (x < y)
-            {
-                if (x < tmpz && (prev == -1 || x > prev))
-                {
+            if (x < y) {
+                if (x < tmpz && (prev == -1 || x > prev)) {
                     xpos = vars.size();
                     vars.add(x);
                     states.add(0);
                     nstates.add(ad.numStates(x));
                 }
-                if (y < tmpz && (prev == -1 || y > prev))
-                {
+                if (y < tmpz && (prev == -1 || y > prev)) {
                     ypos = vars.size();
                     vars.add(y);
                     states.add(0);
                     nstates.add(ad.numStates(y));
                 }
             }
-            else
-            {
-                if (y < tmpz && (prev == -1 || y > prev))
-                {
+            else {
+                if (y < tmpz && (prev == -1 || y > prev)) {
                     ypos = vars.size();
                     vars.add(y);
                     states.add(0);
                     nstates.add(ad.numStates(y));
                 }
-                if (x < tmpz && (prev == -1 || x > prev))
-                {
+                if (x < tmpz && (prev == -1 || x > prev)) {
                     xpos = vars.size();
                     vars.add(x);
                     states.add(0);
@@ -98,8 +91,7 @@ public class DiscIndependenceTest extends IndependenceTest {
         }
 
         // x was not inserted
-        if (xpos == -1)
-        {
+        if (xpos == -1) {
             xpos = vars.size();
             vars.add(x);
             states.add(0);
@@ -107,8 +99,7 @@ public class DiscIndependenceTest extends IndependenceTest {
         }
 
         // y was not inserted
-        if (ypos == -1)
-        {
+        if (ypos == -1) {
             ypos = vars.size();
             vars.add(y);
             states.add(0);
@@ -117,8 +108,7 @@ public class DiscIndependenceTest extends IndependenceTest {
 
         // calculate the number of configurations
         int nconf = 1;
-        for (i = 0; i < (int) nstates.size(); i++)
-        {
+        for (i = 0; i < (int) nstates.size(); i++) {
             nconf *= nstates.get(i);
         }
         //check if 10 * nconf < nsamples (Spirtes & Glymour)
@@ -129,17 +119,13 @@ public class DiscIndependenceTest extends IndependenceTest {
         int nvars = vars.size();
         double g2 = 0;
     	Set<ArrayList<Pair<Integer,Integer> > > test = new HashSet<ArrayList<Pair<Integer,Integer> > >();
-        for (i = 0; i < nconf; i++)
-        {
-            if (i != 0)
-            {
+        for (i = 0; i < nconf; i++) {
+            if (i != 0) {
                 boolean done = false;
-                for (int j = 0; j < (int) states.size() && !done; j++)
-                {
+                for (int j = 0; j < (int) states.size() && !done; j++) {
                     done = true;
                     states.set(j, states.get(j)+1);
-                    if (states.get(j) == nstates.get(j))
-                    {
+                    if (states.get(j) == nstates.get(j)) {
                     	states.set(j,0);
                         done = false;
                     }
@@ -147,8 +133,7 @@ public class DiscIndependenceTest extends IndependenceTest {
             }
             ArrayList<Pair<Integer, Integer> > tmp = new ArrayList<Pair<Integer, Integer> >();
             int j;
-            for (j = 0; j < nvars; j++)
-            {
+            for (j = 0; j < nvars; j++) {
             	tmp.add(new Pair<Integer,Integer>());
                 tmp.get(j).setFirst(new Integer(vars.get(j)));
                 tmp.get(j).setSecond(new Integer(states.get(j)));
@@ -156,10 +141,8 @@ public class DiscIndependenceTest extends IndependenceTest {
             int xijk = ad.getCount(tmp);
             int idx = 0;
             tmp.subList((nvars-1),tmp.size()).clear();
-            for (j = 0; j < nvars; j++)
-            {
-                if (j == ypos)
-                {
+            for (j = 0; j < nvars; j++) {
+                if (j == ypos) {
                     continue;
                 }
                 Pair<Integer, Integer> p = tmp.get(idx);
@@ -175,10 +158,8 @@ public class DiscIndependenceTest extends IndependenceTest {
     				test.add(templst);
     		}
             idx = 0;
-            for (j = 0; j < nvars; j++)
-            {
-                if (j == xpos)
-                {
+            for (j = 0; j < nvars; j++) {
+                if (j == xpos) {
                     continue;
                 }
                 Pair<Integer, Integer> p = tmp.get(idx);
@@ -187,20 +168,17 @@ public class DiscIndependenceTest extends IndependenceTest {
                 idx++;
             }
             int x_jk = ad.getCount(tmp);
-    		if(x_jk == 0)
-    		{
-    				ArrayList<Pair<Integer,Integer>> templst = new ArrayList<Pair<Integer,Integer>>();
-    				for(Pair<Integer,Integer> p: tmp)
-    					templst.add(new Pair<Integer,Integer>(p.getFirst(),p.getSecond()));
-    				test.add(templst);
+    		if(x_jk == 0) {
+				ArrayList<Pair<Integer,Integer>> templst = new ArrayList<Pair<Integer,Integer>>();
+				for(Pair<Integer,Integer> p: tmp)
+					templst.add(new Pair<Integer,Integer>(p.getFirst(),p.getSecond()));
+				test.add(templst);
 			}
             idx = 0;
             tmp.subList((nvars-2),tmp.size()).clear();
             
-            for (j = 0; j < nvars; j++)
-            {
-                if (j == xpos || j == ypos)
-                {
+            for (j = 0; j < nvars; j++) {
+                if (j == xpos || j == ypos) {
                     continue;
                 }
                 Pair<Integer, Integer> p = tmp.get(idx);
@@ -209,8 +187,7 @@ public class DiscIndependenceTest extends IndependenceTest {
                 idx++;
             }
             int x__k = ad.getCount(tmp);
-            if (xijk > 0)
-            {
+            if (xijk > 0) {
                 double logexijk = Math.log((double) xi_k) + Math.log((double) x_jk) - Math.log((double) x__k);
                 g2 += xijk * (Math.log((double) xijk) - logexijk);
             }
@@ -222,15 +199,13 @@ public class DiscIndependenceTest extends IndependenceTest {
     	HashMap<ArrayList<Pair<Integer,Integer> >, Pair<Integer,Integer> > brokentables = 
     			new HashMap<ArrayList<Pair<Integer,Integer> >, Pair<Integer,Integer> >();
     	itt = test.iterator();
-    	while(itt.hasNext())
-    	{
+    	while(itt.hasNext()) {
     		ArrayList<Pair<Integer,Integer> > it = (ArrayList<Pair<Integer, Integer> >) itt.next();
     		Iterator<Pair<Integer,Integer>> vitt;
     		vitt = it.iterator();
     		ArrayList<Pair<Integer,Integer> > set = new ArrayList<Pair<Integer,Integer>>();
     		boolean isX =true;
-    		while(vitt.hasNext())
-    		{
+    		while(vitt.hasNext()) {
     			Pair<Integer, Integer> vit = (Pair<Integer, Integer>) vitt.next();
     			if(vit.getFirst() != x && vit.getFirst() != y) {
     				set.add(vit);
@@ -251,8 +226,7 @@ public class DiscIndependenceTest extends IndependenceTest {
         int xandy=1;
         int condset=1;
         
-        for (i = 0; i <  (int) nstates.size(); i++)
-        {
+        for (i = 0; i <  (int) nstates.size(); i++) {
             if (i == xpos || i == ypos)
                 xandy *= nstates.get(i) - 1;
             else
@@ -262,8 +236,7 @@ public class DiscIndependenceTest extends IndependenceTest {
     	// calc remainder
     	Iterator<Entry<ArrayList<Pair<Integer, Integer>>, Pair<Integer, Integer>>> bitt;
     	bitt = brokentables.entrySet().iterator();
-    	while(bitt.hasNext())
-    	{
+    	while(bitt.hasNext()) {
     		Entry<ArrayList<Pair<Integer, Integer>>, Pair<Integer, Integer>> bit = (Entry<ArrayList<Pair<Integer, Integer>>, Pair<Integer, Integer>>) bitt.next();
     		int broken = 	(nstates.get(xpos) - 1 - ( ( (Pair<Integer, Integer>) bit.getValue()).getFirst() ) ) 
     						* 

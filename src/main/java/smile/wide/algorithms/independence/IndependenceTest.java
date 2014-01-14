@@ -1,8 +1,5 @@
 package smile.wide.algorithms.independence;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -39,34 +36,30 @@ public abstract class IndependenceTest {
 	 * @param signif significance level to be used for the test
 	 * @return true: independent, false: not independent.
 	 */
-    public boolean findCI(Pattern pat, int card, int x, int y, HashSet<Integer> sepset, double signif, MutableDouble mi)
+    public boolean findCI(Pattern pat, int card, int x, int y, HashSet<Integer> sepset, double signif, MutableDouble mi ,ArrayList<Integer> clusters)
     {
-        MutableDouble pvalxy = new MutableDouble(init_extreme_value());
-        MutableDouble dummy = new MutableDouble(0);
+    	MutableDouble pvalxy = new MutableDouble(0.0);
+        MutableDouble dummy = new MutableDouble(0.0);
         
         HashSet<Integer> sepsetxy = new HashSet<Integer>();
-        checkCI(pat, card, x, y, pvalxy, sepsetxy, signif,mi);
+        checkCI(pat, card, x, y, pvalxy, sepsetxy, signif, mi, clusters);
 
-        MutableDouble pvalyx = new MutableDouble(init_extreme_value());
+        MutableDouble pvalyx = new MutableDouble(0.0);
         HashSet<Integer> sepsetyx = new HashSet<Integer>();
-       	checkCI(pat, card, y, x, pvalyx, sepsetyx, signif, dummy);
-       
-        if (pvalxy.doubleValue() != init_extreme_value() || pvalyx.doubleValue() != init_extreme_value())
-        {
-            if (better(pvalxy.doubleValue(),pvalyx.doubleValue()))
-            {
+       	checkCI(pat, card, y, x, pvalyx, sepsetyx, signif, dummy, clusters);
+       	
+        if (pvalxy.doubleValue() > 0.0 || pvalyx.doubleValue() > 0.0) {
+            if (pvalxy.doubleValue() > pvalyx.doubleValue()) {
                 for(Integer q: sepsetxy)
                 	sepset.add(q);
             }
-            else
-            {
+            else {
                 for(Integer q: sepsetyx)
                 	sepset.add(q);
             }
             return true;
         }
-        else
-        {
+        else {
             return false;
         }
     }
@@ -81,8 +74,7 @@ public abstract class IndependenceTest {
 	 * @param sepset empty list to be filled with sepset of x and y
 	 * @param signif significance level to be used for the test
      */
-    protected void checkCI(Pattern pat, int card, int x, int y, MutableDouble maxpval, HashSet<Integer> sepset, double signif, MutableDouble mi)
-    {
+    protected void checkCI(Pattern pat, int card, int x, int y, MutableDouble maxpval, HashSet<Integer> sepset, double signif, MutableDouble mi, ArrayList<Integer> clusters) {
         int nvar = ds.getNumberOfVariables();//number of variables in dataset
 
         // populate elements vector
@@ -90,7 +82,11 @@ public abstract class IndependenceTest {
         int i;
         for (i = 0; i < nvar; i++) {
             if (i != x && i != y && pat.getEdge(x, i) == Pattern.EdgeType.Undirected) {
+            	if(clusters.isEmpty())
                     elements.add(i);
+            	else if(clusters.get(x) == clusters.get(i)){
+                    elements.add(i);
+            	}
             }
         }
         
@@ -119,15 +115,7 @@ public abstract class IndependenceTest {
             }
             double pval;
             pval = calcPValue(x, y, z, mi);
-/*
-            try {
-				mlg.write(x +", "+y+", "+z.size()+", "+pval+", "+mi.doubleValue());
-			} catch (IOException e) {
-				System.exit(-1);
-			}
-//*/
-            if(compareResult(pval,signif,maxpval.doubleValue()))
-            {
+            if(pval > signif && pval > 0.0) {
                 maxpval.setValue(pval);
                 sepset.clear();
                 for(Integer q : z) {
@@ -143,47 +131,37 @@ public abstract class IndependenceTest {
      * @param ones counter
      * @return true, more subsets to consider, false we are done
      */
-    private boolean NxtSubset(ArrayList<Boolean> binvec, MutableInt cur, MutableInt ones)
-    {
-    	if (cur.intValue() < 0)
-    	{
+    private boolean NxtSubset(ArrayList<Boolean> binvec, MutableInt cur, MutableInt ones) {
+    	if (cur.intValue() < 0) {
     		return false;
     	}
 
     	int size = binvec.size();
-    	if ((cur.intValue() + 1 < size) && !binvec.get(cur.intValue() + 1))
-    	{
+    	if ((cur.intValue() + 1 < size) && !binvec.get(cur.intValue() + 1)) {
     		binvec.set(cur.intValue(),false);
     		cur.increment();
     		binvec.set(cur.intValue(),true);
     		return true;
     	}
-    	else
-    	{
+    	else {
     		ones.increment();
-    		for (int i = cur.intValue() - 1; i >= 0; i--)
-    		{
-    			if (binvec.get(i))
-    			{
-    				if (!binvec.get(i + 1))
-    				{
+    		for (int i = cur.intValue() - 1; i >= 0; i--) {
+    			if (binvec.get(i)) {
+    				if (!binvec.get(i + 1)) {
     					binvec.set(i,false);
     					binvec.set(i + 1,true);
     					int j;
-    					for (j = i + 2; j < (i + ones.intValue() + 2); j++)
-    					{
+    					for (j = i + 2; j < (i + ones.intValue() + 2); j++) {
     						binvec.set(j,true);
     					}
     					cur.setValue(j - 1);
     					ones.setValue(0);
-    					for (; j < size; j++)
-    					{
+    					for (; j < size; j++) {
     						binvec.set(j,false);
     					}
     					return true;
     				}
-    				else
-    				{
+    				else {
     					ones.increment();
     				}
     			}
@@ -200,32 +178,4 @@ public abstract class IndependenceTest {
      * @return p-value of independence test
      */
     protected abstract double calcPValue(int x, int y, ArrayList<Integer> z, MutableDouble mi);
-
-    protected boolean compareResult(double pval, double significance, double extreme_value) {
-    	return pval > significance && pval > extreme_value;
-    }
-    protected double init_extreme_value() {
-    	return 0.0;
-    }
-    protected boolean better(double left, double right) {
-    	return left > right;
-    }
-    //mylogger mlg = new mylogger();
-}
-
-
-class mylogger {
-	BufferedWriter w = null; 
-	void write(String s) throws IOException {
-		if(w == null) {
-			w = new BufferedWriter(new FileWriter("pvaldata.txt"));
-			w.write("x, y, zsize, pval, mi\n");
-		}
-		w.write(s+"\n");
-		w.flush();
-	}
-	protected void finalize() throws IOException {
-		w.close();
-	}
-
 }

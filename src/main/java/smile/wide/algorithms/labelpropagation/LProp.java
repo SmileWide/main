@@ -43,11 +43,13 @@ public class LProp {
 				for(Integer a : ad)
 				{
 					double weight = adjacency_matrix.get(it).get(a);
-					Integer n_cluster = node_clusters.get(a);
-					if(!freq.containsKey(n_cluster) )
-						freq.put(n_cluster, weight);
-					else
-						freq.put(n_cluster, freq.get(n_cluster)+weight);
+					if(weight > 0.0) {
+						Integer n_cluster = node_clusters.get(a);
+						if(!freq.containsKey(n_cluster) )
+							freq.put(n_cluster, weight);
+						else
+							freq.put(n_cluster, freq.get(n_cluster)+weight);
+					}
 				}
 	    		if(!freq.isEmpty())//if node has neighbours
 	    		{
