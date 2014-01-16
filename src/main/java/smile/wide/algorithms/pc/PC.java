@@ -27,8 +27,7 @@ public class PC {
 	 * @param container of all sepsets, variables x, y, and e
 	 * @return true or false (depending if e is present in the sepset)
 	 */	
-    private boolean sepsetHas(ArrayList<ArrayList<Set<Integer> > > sepsets, int x, int y, int e)
-    {
+    private boolean sepsetHas(ArrayList<ArrayList<Set<Integer> > > sepsets, int x, int y, int e) {
         // check if the given sepset contains element e
         Set<Integer> sepset = sepsets.get(x).get(y);
         if(sepset == null)
@@ -42,37 +41,30 @@ public class PC {
 	 *  @param dataset
 	 *  @return pattern.
 	 */	
-    public Pattern Learn( DataSet ds) 
-    {
+    public Pattern Learn( DataSet ds) {
     	Pattern pat = new Pattern();
         int nvar = ds.getNumberOfVariables();
         int n = ds.getNumberOfRecords();
-        if (n < 3)
-        {
+        if (n < 3) {
         	throw new IllegalArgumentException("pc: too few data points");
         }
-        if (nvar < 2)
-        {
+        if (nvar < 2) {
         	throw new IllegalArgumentException("pc: too few variables");
         }
 
         // check if all vars are discrete or continuous
         boolean disc = false;
         boolean cont = false;
-        for (int v = 0; v < nvar; v++)
-        {
-            if (ds.isDiscrete(v))
-            {
+        for (int v = 0; v < nvar; v++) {
+            if (ds.isDiscrete(v)) {
                 disc = true;
             }
-            else
-            {
+            else {
                 cont = true;
             }
         }
 
-        if (disc && cont)
-        {
+        if (disc && cont) {
         	throw new IllegalArgumentException("pc: a mix of continuous and discrete variables is not allowed");
         }
 
@@ -81,35 +73,25 @@ public class PC {
         ArrayList<Boolean> prob = new ArrayList<Boolean>(Collections.nCopies(nvar, false));
         int nprob = 0;
         int r;
-        for (r = 0; nprob < nvar && r < n; r++)
-        {
-            for (int c = 0; nprob < nvar && c < nvar; c++)
-            {
-                if (ds.isDiscrete(c))
-                {
-                    if (r == 0)
-                    {
+        for (r = 0; nprob < nvar && r < n; r++) {
+            for (int c = 0; nprob < nvar && c < nvar; c++) {
+                if (ds.isDiscrete(c)) {
+                    if (r == 0) {
                         tmp.set(c,(double) ds.getInt(c, r));//DOUBLE CHECK IF THIS IS OK
                     }
-                    else
-                    {
-                        if (!prob.get(c) && tmp.get(c) != ds.getInt(c, r))
-                        {
+                    else {
+                        if (!prob.get(c) && tmp.get(c) != ds.getInt(c, r)) {
                             prob.set(c,true);
                             nprob++;
                         }
                     }
                 }
-                else
-                {
-                    if (r == 0)
-                    {
+                else {
+                    if (r == 0) {
                         tmp.set(c,ds.getDouble(c, r));
                     }
-                    else
-                    {
-                        if (!prob.get(c) && tmp.get(c) != ds.getDouble(c, r))
-                        {
+                    else {
+                        if (!prob.get(c) && tmp.get(c) != ds.getDouble(c, r)) {
                             prob.set(c,true);
                             nprob++;
                         }
@@ -117,13 +99,10 @@ public class PC {
                 }
             }
         }
-        if (nprob != nvar)
-        {
+        if (nprob != nvar) {
             String vars = "";
-            for (int i = 0; i < (int) prob.size(); i++)
-            {
-                if (!prob.get(i))
-                {
+            for (int i = 0; i < (int) prob.size(); i++) {
+                if (!prob.get(i)) {
                     vars += " " + ds.getId(i);
                 }
             }
@@ -131,12 +110,9 @@ public class PC {
         	throw new IllegalArgumentException("pc: constant variables not allowed: "+vars);
         }
         // check if there are no missing values
-        for (r = 0; r < n; r++)
-        {
-            for (int v = 0; v < nvar; v++)
-            {
-                if (ds.isMissing(v, r))
-                {
+        for (r = 0; r < n; r++) {
+            for (int v = 0; v < nvar; v++) {
+                if (ds.isMissing(v, r)) {
                 	//missing values
                 	throw new IllegalArgumentException("pc: a missing values not allowed");
                 }
@@ -147,16 +123,12 @@ public class PC {
         // initialize pattern
         pat.setSize(nvar);
         int i;
-        for (i = 0; i < nvar; i++)
-        {
-            for (int j = 0; j < nvar; j++)
-            {
-                if (i == j)
-                {
+        for (i = 0; i < nvar; i++) {
+            for (int j = 0; j < nvar; j++) {
+                if (i == j) {
                     pat.setEdge(i, j, Pattern.EdgeType.None);
                 }
-                else
-                {
+                else {
                     pat.setEdge(i, j, Pattern.EdgeType.Undirected);
                 }
             }
@@ -168,8 +140,7 @@ public class PC {
         for (int x=0; x< nvar; x++) {
         	sepsets.add(new ArrayList<Set<Integer> >());
         }
-        for (i = 0; i < nvar; i++)
-        {
+        for (i = 0; i < nvar; i++) {
             for (int x=0; x< nvar; x++) {
             	sepsets.get(i).add(new HashSet<Integer>());
             }
@@ -182,26 +153,18 @@ public class PC {
 		}
 
         // step 3: orient edges as v-structure
-        for (i = 0; i < nvar; i++)
-        {
-            for (int adj1 = 0; adj1 < nvar; adj1++)
-            {
-                if (i != adj1 && (pat.getEdge(adj1, i) != Pattern.EdgeType.None || pat.getEdge(i, adj1) != Pattern.EdgeType.None))
-                {
-                    for (int adj2 = adj1 + 1; adj2 < nvar; adj2++)
-                    {
-                        if (i != adj2 && (pat.getEdge(adj2, i) != Pattern.EdgeType.None || pat.getEdge(i, adj2) != Pattern.EdgeType.None))
-                        {
-                            if (pat.getEdge(adj1, adj2) == Pattern.EdgeType.None && pat.getEdge(adj2, adj1) == Pattern.EdgeType.None && !sepsetHas(sepsets, adj1, adj2, i))
-                            {
+        for (i = 0; i < nvar; i++) {
+            for (int adj1 = 0; adj1 < nvar; adj1++) {
+                if (i != adj1 && (pat.getEdge(adj1, i) != Pattern.EdgeType.None || pat.getEdge(i, adj1) != Pattern.EdgeType.None)) {
+                    for (int adj2 = adj1 + 1; adj2 < nvar; adj2++) {
+                        if (i != adj2 && (pat.getEdge(adj2, i) != Pattern.EdgeType.None || pat.getEdge(i, adj2) != Pattern.EdgeType.None)) {
+                            if (pat.getEdge(adj1, adj2) == Pattern.EdgeType.None && pat.getEdge(adj2, adj1) == Pattern.EdgeType.None && !sepsetHas(sepsets, adj1, adj2, i)) {
                                 pat.setEdge(adj1, i, Pattern.EdgeType.Directed);
                                 pat.setEdge(adj2, i, Pattern.EdgeType.Directed);
-                                if (pat.getEdge(i, adj1) == Pattern.EdgeType.Undirected)
-                                {
+                                if (pat.getEdge(i, adj1) == Pattern.EdgeType.Undirected) {
                                     pat.setEdge(i, adj1, Pattern.EdgeType.None);
                                 }
-                                if (pat.getEdge(i, adj2) == Pattern.EdgeType.Undirected)
-                                {
+                                if (pat.getEdge(i, adj2) == Pattern.EdgeType.Undirected) {
                                     pat.setEdge(i, adj2, Pattern.EdgeType.None);
                                 }
                             }
@@ -213,31 +176,22 @@ public class PC {
 
         // step 4: orient remaining edges
         boolean update = true;
-        while (update)
-        {
+        while (update) {
             update = false;
             // a) orient x -> y - z as x -> y -> z
-            for (i = 0; i < nvar; i++)
-            {
-                for (int adj1 = 0; adj1 < nvar; adj1++)
-                {
-                    for (int adj2 = adj1 + 1; adj2 < nvar; adj2++)
-                    {
-                        if (i != adj1 && i != adj2 && pat.getEdge(adj1, i) == Pattern.EdgeType.Directed && pat.getEdge(adj2, i) == Pattern.EdgeType.Undirected && pat.getEdge(adj1, adj2) == Pattern.EdgeType.None && pat.getEdge(adj2, adj1) == Pattern.EdgeType.None)
-                        {
-                            if (!pat.hasDirectedPath(adj2, i))
-                            {
+            for (i = 0; i < nvar; i++) {
+                for (int adj1 = 0; adj1 < nvar; adj1++) {
+                    for (int adj2 = adj1 + 1; adj2 < nvar; adj2++) {
+                        if (i != adj1 && i != adj2 && pat.getEdge(adj1, i) == Pattern.EdgeType.Directed && pat.getEdge(adj2, i) == Pattern.EdgeType.Undirected && pat.getEdge(adj1, adj2) == Pattern.EdgeType.None && pat.getEdge(adj2, adj1) == Pattern.EdgeType.None) {
+                            if (!pat.hasDirectedPath(adj2, i)) {
                                 pat.setEdge(i, adj2, Pattern.EdgeType.Directed);
                                 pat.setEdge(adj2, i, Pattern.EdgeType.None);
                                 update = true;
                             }
                         }
-                        else
-                        {
-                            if (i != adj1 && i != adj2 && pat.getEdge(adj2, i) == Pattern.EdgeType.Directed && pat.getEdge(adj1, i) == Pattern.EdgeType.Undirected && pat.getEdge(adj1, adj2) == Pattern.EdgeType.None && pat.getEdge(adj2, adj1) == Pattern.EdgeType.None)
-                            {
-                                if (!pat.hasDirectedPath(adj1, i))
-                                {
+                        else {
+                            if (i != adj1 && i != adj2 && pat.getEdge(adj2, i) == Pattern.EdgeType.Directed && pat.getEdge(adj1, i) == Pattern.EdgeType.Undirected && pat.getEdge(adj1, adj2) == Pattern.EdgeType.None && pat.getEdge(adj2, adj1) == Pattern.EdgeType.None) {
+                                if (!pat.hasDirectedPath(adj1, i)) {
                                     pat.setEdge(i, adj1, Pattern.EdgeType.Directed);
                                     pat.setEdge(adj1, i, Pattern.EdgeType.None);
                                     update = true;
@@ -248,31 +202,23 @@ public class PC {
                 }
             }
             // b) orient x - z as x -> z if there is a path x -> ... -> z
-            for (int x = 0; x < nvar; x++)
-            {
-                for (int y = x + 1; y < nvar; y++)
-                {
-                    if (pat.getEdge(x, y) == Pattern.EdgeType.Undirected)
-                    {
+            for (int x = 0; x < nvar; x++) {
+                for (int y = x + 1; y < nvar; y++) {
+                    if (pat.getEdge(x, y) == Pattern.EdgeType.Undirected) {
                         // search for directed path from x -> y and y -> x
                         boolean xy = pat.hasDirectedPath(x, y);
                         boolean yx = pat.hasDirectedPath(y, x);
-                        if (xy && yx)
-                        {
+                        if (xy && yx) {
                             assert(false);
                         }
-                        else
-                        {
-                            if (xy)
-                            {
+                        else {
+                            if (xy) {
                                 pat.setEdge(x, y, Pattern.EdgeType.Directed);
                                 pat.setEdge(y, x, Pattern.EdgeType.None);
                                 update = true;
                             }
-                            else
-                            {
-                                if (yx)
-                                {
+                            else {
+                                if (yx) {
                                     pat.setEdge(y, x, Pattern.EdgeType.Directed);
                                     pat.setEdge(x, y, Pattern.EdgeType.None);
                                     update = true;
@@ -286,8 +232,7 @@ public class PC {
         // done
         return pat;
     }
-	public static void main(String args[])
-	{
+	public static void main(String args[]) {
 		SMILEData ds = new SMILEData();
 //		ds.Read("../input/Hepar14k.txt");
 		ds.Read("../input/Cpcs179.txt");

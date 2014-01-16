@@ -15,8 +15,7 @@ import smile.wide.utils.LazyADTree;
 import smile.wide.utils.Pair;
 import smile.wide.utils.SMILEMath;
 
-/** Independence test for continuous data 
- * (Assumes Gaussian distributions)
+/** Independence test for discrete data 
  * Is initialized with a DataSet
  * calculates p-value of test
  * @author m.a.dejongh@gmail.com
@@ -117,7 +116,7 @@ public class DiscIndependenceTest extends IndependenceTest {
         }
         // main loop
         int nvars = vars.size();
-        double g2 = 0;
+        double g2 = 0.0;
     	Set<ArrayList<Pair<Integer,Integer> > > test = new HashSet<ArrayList<Pair<Integer,Integer> > >();
         for (i = 0; i < nconf; i++) {
             if (i != 0) {

@@ -3,6 +3,7 @@ package smile.wide.algorithms.independence;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.lang.mutable.MutableDouble;
 import org.apache.commons.lang.mutable.MutableInt;
@@ -36,17 +37,17 @@ public abstract class IndependenceTest {
 	 * @param signif significance level to be used for the test
 	 * @return true: independent, false: not independent.
 	 */
-    public boolean findCI(Pattern pat, int card, int x, int y, HashSet<Integer> sepset, double signif, MutableDouble mi ,ArrayList<Integer> clusters)
+    public boolean findCI(Pattern pat, int card, int x, int y, HashSet<Integer> sepset, double signif, MutableDouble mi)
     {
-    	MutableDouble pvalxy = new MutableDouble(0.0);
         MutableDouble dummy = new MutableDouble(0.0);
-        
+
+    	MutableDouble pvalxy = new MutableDouble(0.0);
         HashSet<Integer> sepsetxy = new HashSet<Integer>();
-        checkCI(pat, card, x, y, pvalxy, sepsetxy, signif, mi, clusters);
+        checkCI(pat, card, x, y, pvalxy, sepsetxy, signif, mi);
 
         MutableDouble pvalyx = new MutableDouble(0.0);
         HashSet<Integer> sepsetyx = new HashSet<Integer>();
-       	checkCI(pat, card, y, x, pvalyx, sepsetyx, signif, dummy, clusters);
+       	checkCI(pat, card, y, x, pvalyx, sepsetyx, signif, dummy);
        	
         if (pvalxy.doubleValue() > 0.0 || pvalyx.doubleValue() > 0.0) {
             if (pvalxy.doubleValue() > pvalyx.doubleValue()) {
@@ -74,22 +75,21 @@ public abstract class IndependenceTest {
 	 * @param sepset empty list to be filled with sepset of x and y
 	 * @param signif significance level to be used for the test
      */
-    protected void checkCI(Pattern pat, int card, int x, int y, MutableDouble maxpval, HashSet<Integer> sepset, double signif, MutableDouble mi, ArrayList<Integer> clusters) {
+    protected void checkCI(Pattern pat, int card, int x, int y, MutableDouble maxpval, HashSet<Integer> sepset, double signif, MutableDouble mi) {
         int nvar = ds.getNumberOfVariables();//number of variables in dataset
 
+        MinimumCutSet m = new MinimumCutSet(pat);
+        Set<Integer> cutset = m.cutSet(x, y);
         // populate elements vector
         ArrayList<Integer> elements=new ArrayList<Integer>();
         int i;
         for (i = 0; i < nvar; i++) {
             if (i != x && i != y && pat.getEdge(x, i) == Pattern.EdgeType.Undirected) {
-            	if(clusters.isEmpty())
-                    elements.add(i);
-            	else if(clusters.get(x) == clusters.get(i)){
-                    elements.add(i);
-            	}
+        		if(cutset.contains(i))
+        			elements.add(i);
             }
         }
-        
+       
         // check for enough elements
         if ((int) elements.size() < card) {
             return;

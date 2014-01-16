@@ -43,6 +43,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import smile.wide.algorithms.independence.MinimumCutSet;
 import smile.wide.utils.Pair;
 import smile.wide.utils.Pattern;
 import smile.wide.utils.Pattern.EdgeType;
@@ -64,6 +65,8 @@ public class ChenJob extends Configured implements Tool {
 	Configuration conf = null;
 	int nvar = 0;
 	
+	MinimumCutSet m = null;
+	
 	@Override
 	public int run(String[] params) throws Exception {
 		conf = super.getConf();
@@ -74,6 +77,8 @@ public class ChenJob extends Configured implements Tool {
 		//get epsilon
 		epsilon = conf.getFloat("epsilon", 0);
 
+		m = new MinimumCutSet(pat);
+		
 		// create sepsets
         for (int x=0; x< nvar; x++)
         	sepsets.add(new ArrayList<Set<Integer> >());
@@ -166,7 +171,9 @@ public class ChenJob extends Configured implements Tool {
 		}
 		return result;
 	}
-	
+
+/*	
+
 	boolean depthFirstSearchPaths(Set<Integer> marked, Set<Integer> result, int current, int target) {
 		boolean onpath = false;
 		if( !marked.contains(current) ){
@@ -262,9 +269,9 @@ public class ChenJob extends Configured implements Tool {
 		}
 		return result;
 	}
-
+*/
 	boolean edgeNeeded(int x, int y) throws Exception {
-		Set<Integer> cutset = minimumCutSet(x,y);
+		Set<Integer> cutset = m.minimumCutSet(x,y);
 		System.out.println("cutset: "+cutset);
 		double IxyZ = 2*epsilon;
 		if(!cutset.isEmpty())

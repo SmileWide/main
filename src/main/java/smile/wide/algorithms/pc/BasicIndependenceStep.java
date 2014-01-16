@@ -70,22 +70,26 @@ public class BasicIndependenceStep extends IndependenceStep {
         MutableDouble mi = new MutableDouble(0.0);
 
         //for MI clusters
-        LProp lp = new LProp();
-		ArrayList<Integer> clusters = new ArrayList<Integer>();
+        //LProp lp = new LProp();
+		//ArrayList<Integer> clusters = new ArrayList<Integer>();
 
+        double tot =( nvar * (nvar -1)) / 2.0;
         while (true) {
+            double iter_counter =0;
         	int counter=0;
             for (int x = 0; x < nvar; x++) {
             	int xx = nodes.get(x);
             	for (int y = x + 1; y < nvar; y++) {
+                    iter_counter++;
+                    if(iter_counter % 100 == 0)
+                    	System.out.println(" "+ 100.0*(iter_counter / tot));	
                 	int yy = nodes.get(y);
-                	
                 	if (pat.getEdge(xx, yy) == Pattern.EdgeType.None && pat.getEdge(yy, xx) == Pattern.EdgeType.None) {
                         continue;
                     }
                     HashSet<Integer> sepset= new HashSet<Integer>();
                     mi.setValue(0.0);
-                    if (itest.findCI(pat, card, xx, yy, sepset, significance, mi, clusters)) {
+                    if (itest.findCI(pat, card, xx, yy, sepset, significance, mi)) {
                     	if(card > 0) {
                     		//decrease node MI
                     		node_array.set(xx, node_array.get(xx) - mi_array.get(xx).get(yy));
@@ -116,10 +120,9 @@ public class BasicIndependenceStep extends IndependenceStep {
 			//sort node_array and nodes
 			Collections.sort(nodes, new MIComparator(node_array));
 
+			/*
 			//calc clusters
 			lp.CalcClusters(clusters,mi_array);
-			System.out.println(clusters);
-			
 			//save MI matrix to csv file (need format that allows writing of cluster ids)
 			BufferedWriter w,v;
 			try {
@@ -144,9 +147,9 @@ public class BasicIndependenceStep extends IndependenceStep {
 				w.close();
 				v.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			*/
 			card++;
             if (card > nvar - 2 || card > maxAdjacency) {
                 break;
