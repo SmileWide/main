@@ -37,17 +37,19 @@ public abstract class IndependenceTest {
 	 * @param signif significance level to be used for the test
 	 * @return true: independent, false: not independent.
 	 */
-    public boolean findCI(Pattern pat, int card, int x, int y, HashSet<Integer> sepset, double signif, MutableDouble mi)
+    public boolean findCI(Pattern pat, int card, int x, int y, HashSet<Integer> sepset, double signif, MutableDouble mi, ArrayList<ArrayList<Boolean>> excluded)
     {
         MutableDouble dummy = new MutableDouble(0.0);
 
     	MutableDouble pvalxy = new MutableDouble(0.0);
         HashSet<Integer> sepsetxy = new HashSet<Integer>();
-        checkCI(pat, card, x, y, pvalxy, sepsetxy, signif, mi);
+        if(excluded == null || !excluded.get(x).get(y))
+        	checkCI(pat, card, x, y, pvalxy, sepsetxy, signif, mi, excluded);
 
         MutableDouble pvalyx = new MutableDouble(0.0);
         HashSet<Integer> sepsetyx = new HashSet<Integer>();
-       	checkCI(pat, card, y, x, pvalyx, sepsetyx, signif, dummy);
+        if((excluded == null || !excluded.get(y).get(x)) && card > 0)
+        	checkCI(pat, card, y, x, pvalyx, sepsetyx, signif, dummy, excluded);
        	
         if (pvalxy.doubleValue() > 0.0 || pvalyx.doubleValue() > 0.0) {
             if (pvalxy.doubleValue() > pvalyx.doubleValue()) {
@@ -75,7 +77,7 @@ public abstract class IndependenceTest {
 	 * @param sepset empty list to be filled with sepset of x and y
 	 * @param signif significance level to be used for the test
      */
-    protected void checkCI(Pattern pat, int card, int x, int y, MutableDouble maxpval, HashSet<Integer> sepset, double signif, MutableDouble mi) {
+    protected void checkCI(Pattern pat, int card, int x, int y, MutableDouble maxpval, HashSet<Integer> sepset, double signif, MutableDouble mi, ArrayList<ArrayList<Boolean>> excluded) {
         int nvar = ds.getNumberOfVariables();//number of variables in dataset
 
         MinimumCutSet m = new MinimumCutSet(pat);
@@ -105,6 +107,7 @@ public abstract class IndependenceTest {
         boolean first = true;
     	MutableInt cur = new MutableInt(card - 1);
     	MutableInt ones = new MutableInt(0);
+    	boolean exclude_edge = true;
         for (; first || NxtSubset(binvec, cur, ones); ) {
             first = false;
             ArrayList<Integer> z = new ArrayList<Integer>();
@@ -115,6 +118,9 @@ public abstract class IndependenceTest {
             }
             double pval;
             pval = calcPValue(x, y, z, mi);
+            if(pval > -1.0) {
+            	exclude_edge = false;
+            }
             if(pval > signif && pval > 0.0) {
                 maxpval.setValue(pval);
                 sepset.clear();
@@ -122,6 +128,9 @@ public abstract class IndependenceTest {
                 	sepset.add(q.intValue());
                 }
             }
+        }
+        if(exclude_edge) {
+        	excluded.get(x).set(y,true);
         }
     }
     

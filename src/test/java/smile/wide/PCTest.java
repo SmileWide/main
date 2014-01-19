@@ -13,9 +13,12 @@ public class PCTest {
 		SMILEData ds = new SMILEData();
 		System.out.println("Loading test data");
 		//ds.Read("input/Alarm5k.txt");
-		ds.Read("input/Hepar14k.txt");
+		//ds.Read("input/Hepar14k.txt");
 		//ds.Read("input/Cpcs179.txt");
 		//ds.Read("input/retention.txt");
+		//ds.Read("input/Alarm10_s5000_v10.txt");
+		ds.Read("input/HailFinder10_s5000_v10.txt");
+		//ds.Read("input/HailFinder10_s500_v10.txt");
 		Pattern pat = new Pattern();
 		PC alg = new PC();
 		alg.maxAdjacency = 8;
@@ -27,7 +30,7 @@ public class PCTest {
 		pat = alg.Learn(ds);
 		System.out.println();
 		System.out.println("Result");
-		pat.Print();
+		//pat.Print();
 		long completedIn = System.currentTimeMillis() - time;
 		System.out.println(DurationFormatUtils.formatDuration(completedIn, "HH:mm:ss:SS"));
 	}

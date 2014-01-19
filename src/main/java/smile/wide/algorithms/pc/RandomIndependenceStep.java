@@ -71,7 +71,7 @@ public class RandomIndependenceStep extends IndependenceStep {
         		examined.add(new Pair<Integer,Integer>(x,y));
 	            HashSet<Integer> sepset= new HashSet<Integer>();
 	            MutableDouble mi = new MutableDouble(-1.0);
-	            if (itest.findCI(pat, adjacency, x, y, sepset, significance,mi))
+	            if (itest.findCI(pat, adjacency, x, y, sepset, significance,mi,null))//need something for node exclusion
 	            {
 	                pat.setEdge(x, y, Pattern.EdgeType.None);
 	                pat.setEdge(y, x, Pattern.EdgeType.None);

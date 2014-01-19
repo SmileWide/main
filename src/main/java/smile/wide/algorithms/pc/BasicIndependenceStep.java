@@ -70,9 +70,18 @@ public class BasicIndependenceStep extends IndependenceStep {
         MutableDouble mi = new MutableDouble(0.0);
 
         //for MI clusters
-        //LProp lp = new LProp();
-		//ArrayList<Integer> clusters = new ArrayList<Integer>();
+        LProp lp = new LProp();
+		ArrayList<Integer> clusters = new ArrayList<Integer>();
 
+		//node exclusion
+		ArrayList<ArrayList<Boolean>> excluded = new ArrayList<ArrayList<Boolean>>();
+		for(int x=0;x<nvar;++x) {
+			excluded.add(new ArrayList<Boolean>());
+			for(int y=0;y<nvar;++y)
+				excluded.get(x).add(false);
+		}
+			
+		
         double tot =( nvar * (nvar -1)) / 2.0;
         while (true) {
             double iter_counter =0;
@@ -89,7 +98,7 @@ public class BasicIndependenceStep extends IndependenceStep {
                     }
                     HashSet<Integer> sepset= new HashSet<Integer>();
                     mi.setValue(0.0);
-                    if (itest.findCI(pat, card, xx, yy, sepset, significance, mi)) {
+                    if (itest.findCI(pat, card, xx, yy, sepset, significance, mi, excluded)) {
                     	if(card > 0) {
                     		//decrease node MI
                     		node_array.set(xx, node_array.get(xx) - mi_array.get(xx).get(yy));
@@ -120,7 +129,7 @@ public class BasicIndependenceStep extends IndependenceStep {
 			//sort node_array and nodes
 			Collections.sort(nodes, new MIComparator(node_array));
 
-			/*
+			
 			//calc clusters
 			lp.CalcClusters(clusters,mi_array);
 			//save MI matrix to csv file (need format that allows writing of cluster ids)
@@ -149,7 +158,7 @@ public class BasicIndependenceStep extends IndependenceStep {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			*/
+			
 			card++;
             if (card > nvar - 2 || card > maxAdjacency) {
                 break;

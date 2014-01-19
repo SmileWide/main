@@ -110,8 +110,8 @@ public class DiscIndependenceTest extends IndependenceTest {
         for (i = 0; i < (int) nstates.size(); i++) {
             nconf *= nstates.get(i);
         }
-        //check if 10 * nconf < nsamples (Spirtes & Glymour)
-        if(10*nconf >= ds.getNumberOfRecords()) {
+        //check if 5 * nconf < nsamples (Spirtes & Glymour)
+        if(5*nconf >= ds.getNumberOfRecords()) {
         	return -1.0;
         }
         // main loop
@@ -246,6 +246,8 @@ public class DiscIndependenceTest extends IndependenceTest {
         g2 *= 2;
         if (dof <= 0)
             dof = 1;
+        if(g2 < 0)
+        	g2=0;
         double pval = SMILEMath.gammq((double) (0.5 * dof), (double) (0.5 * g2));
         //Mutual Information calculation
         double m_inf = g2 / (2.0 * ds.getNumberOfRecords() * Math.log(2.0));
