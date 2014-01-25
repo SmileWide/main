@@ -192,8 +192,6 @@ public class LazyADTree extends DataCounter{
 		free_adnodes = 10000;
 		free_varynodes = 10000;
 		root = null;
-		System.out.println("WE ARE KILLING THE TREE");
-		//System.exit(-1);
 	}
 
 	/**creates a new tree*/

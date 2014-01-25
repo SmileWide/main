@@ -112,7 +112,7 @@ public class DiscIndependenceTest extends IndependenceTest {
         }
         //check if 5 * nconf < nsamples (Spirtes & Glymour)
         if(5*nconf >= ds.getNumberOfRecords()) {
-        	return -1.0;
+        	return 1.0;//TODO: MDJ removes edge if statistics are insufficient
         }
         // main loop
         int nvars = vars.size();

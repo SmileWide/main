@@ -1,5 +1,8 @@
 package smile.wide.algorithms.pc;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -235,7 +238,8 @@ public class PC {
 	public static void main(String args[]) {
 		SMILEData ds = new SMILEData();
 //		ds.Read("../input/Hepar14k.txt");
-		ds.Read("../input/Cpcs179.txt");
+//		ds.Read("../input/Cpcs179.txt");
+		ds.Read("../input/HailFinder10_s500_v10.txt");
 		Pattern pat = new Pattern();
 		PC alg = new PC();
 		//alg.istep = new HadoopIndependenceStep();
@@ -244,6 +248,26 @@ public class PC {
 		alg.significance = 0.05;
 		pat = alg.Learn(ds);
 		pat.Print();
+		BufferedWriter v;
+		int nvar = pat.getSize();
+		try {
+			v = new BufferedWriter(new FileWriter("result_edge_network_"+nvar+".vna"));
+			v.write("*node data\nID\n");
+			for(int z=0;z<nvar;++z) {
+				v.write("v"+z+"\n");
+			}
+			v.write("*tie data\nfrom to strength\n");
+			for(int i=0;i<nvar;++i) {
+				for(int j=0;j<nvar;++j) {
+					if(pat.getEdge(i, j)!=Pattern.EdgeType.None)
+						v.write("v"+i+" v"+j+" 1.0\n");
+				}
+			}
+			v.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 }
 

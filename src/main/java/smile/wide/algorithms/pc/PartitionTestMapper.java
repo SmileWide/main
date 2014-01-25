@@ -34,17 +34,16 @@ import smile.wide.utils.Pattern;
  * @author m.a.dejongh@gmail.com
  *
  */
-public class IndependenceTestMapper extends Mapper<LongWritable, Void, Text, ItestPairArrayWritable> {
+public class PartitionTestMapper extends Mapper<LongWritable, Void, Text, ItestPairArrayWritable> {
 	String datafile = "";
 	int adjacency = 0;
-	int randSeed = 0;
 	double significance = 0.05;
 	int numberoftests = 0;
 	boolean disc = true;
 	Pattern pat = new Pattern();	
 	SMILEData ds = new SMILEData();
 	ArrayList<ArrayList<Set<Integer>>> sepsets = new ArrayList<ArrayList<Set<Integer>>>(); 
-	RandomIndependenceStep itest = null;
+	PartitionIndependenceStep itest = null;
     ArrayList<Pair<Integer,Integer>> removed = new ArrayList<Pair<Integer,Integer>>();
 	ArrayList<Pair<Pair<Integer,Integer>,ArrayList<Integer>>> tresult = new ArrayList<Pair<Pair<Integer,Integer>,ArrayList<Integer>>>();
 	ArrayList<Integer> l = null;
@@ -79,9 +78,8 @@ public class IndependenceTestMapper extends Mapper<LongWritable, Void, Text, Ite
 	@Override
 	protected void map(LongWritable key, Void value, Context context) throws IOException, InterruptedException  {
 		//get seeds
-		long k = key.get();
-		randSeed = (int)(k & 0xffffffffL);
-		itest = new RandomIndependenceStep(randSeed,numberoftests);
+		int start = (int) key.get();
+		itest = new PartitionIndependenceStep(start,numberoftests);
 		itest.removed = removed;
 		try {
 			itest.execute(ds, pat, disc, adjacency, significance, sepsets);

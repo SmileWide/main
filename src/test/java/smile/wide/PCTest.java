@@ -17,8 +17,8 @@ public class PCTest {
 		//ds.Read("input/Cpcs179.txt");
 		//ds.Read("input/retention.txt");
 		//ds.Read("input/Alarm10_s5000_v10.txt");
-		ds.Read("input/HailFinder10_s5000_v10.txt");
-		//ds.Read("input/HailFinder10_s500_v10.txt");
+		//ds.Read("input/HailFinder10_s5000_v10.txt");
+		ds.Read("input/HailFinder10_s500_v10.txt");
 		Pattern pat = new Pattern();
 		PC alg = new PC();
 		alg.maxAdjacency = 8;

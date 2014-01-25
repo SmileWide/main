@@ -36,20 +36,20 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import smile.wide.data.SMILEData;
 import smile.wide.hadoop.io.ItestPairArrayWritable;
-import smile.wide.hadoop.io.RandSeedInputFormat;
+import smile.wide.hadoop.io.PartitionInputFormat;
 import smile.wide.utils.Pattern;
 import smile.wide.utils.Pattern.EdgeType;
 
 /** 
  * @author m.a.dejongh@gmail.com
  */
-public class DistributedIndependenceJob extends Configured implements Tool {
+public class PartitionIndependenceJob extends Configured implements Tool {
 	/** Sets up the hadoop job and sends it to the cluster
 	 * waits for the job to be completed.*/
 
 	/** Path to SMILE library*/
 	private String libHDFSPath_ = "/user/mdejongh/lib/linux64";
-	int numberoftests = 10;
+	int maxmaps = 2000;
 	public SMILEData data = null;
 	public Pattern pat = null;
 	public ArrayList<ArrayList<Set<Integer>>> sepsets = null;
@@ -87,27 +87,25 @@ public class DistributedIndependenceJob extends Configured implements Tool {
 		conf.setLong("mapred.task.timeout", 3600000);
 		int maxAdjacency = conf.getInt("maxAdjacency",0);
 
-		//int RandSeedInputFormat
-		conf.setInt(RandSeedInputFormat.CONFKEY_SEED_COUNT, 2000);//number of mappers to be run
-		conf.setInt(RandSeedInputFormat.CONFKEY_WARMUP_ITER, 100000);
-		
 		for(int adjacency = 0; adjacency <= maxAdjacency;++adjacency) {
-			//determine optimal # of tests to keep same error prob
-			double p_error = 0.000001;
 			double edges = 0.0;
-			double maps = (double) conf.getInt(RandSeedInputFormat.CONFKEY_SEED_COUNT,0);
 			for(int x=0;x<pat.getSize();++x) {
 				for(int y=x+1;y<pat.getSize();++y) {
 					if(pat.getEdge(x,y)==EdgeType.Undirected)
 						edges+=1;
 				}
 			}
-			System.out.println("p_error "+p_error);
+			double maps = (double) maxmaps;
+			int K = (int) Math.ceil(edges/maps);
+			maps = Math.ceil(edges/K);
+			maxmaps = (int) maps;
 			System.out.println("edges "+edges);
 			System.out.println("maps "+maps);
-			int K = (int) Math.ceil(edges * (1.0-Math.pow(p_error, (1.0/maps))));
 			System.out.println("value of K: "+K);
 			conf.setInt("numberoftests",K);
+			//init RandSeedInputFormat
+			conf.setInt(PartitionInputFormat.CONFKEY_MAP_COUNT, maxmaps);//number of mappers to be run
+			conf.setInt(PartitionInputFormat.CONFKEY_INTERVAL_COUNT, K);//number of mappers to be run
 			testIndependence(conf,adjacency);
 		}
 		f.delete();
@@ -120,14 +118,14 @@ public class DistributedIndependenceJob extends Configured implements Tool {
 
 		//init job
 		Job job = new Job(conf);
-		job.setJobName("Distribute Independence Tests Over Mappers and Collect Results, phase " + adjacency);
-		job.setJarByClass(DistributedIndependenceJob.class);
-		job.setMapperClass(IndependenceTestMapper.class);
+		job.setJobName("Partition Independence Tests Over Mappers and Collect Results, phase " + adjacency);
+		job.setJarByClass(PartitionIndependenceJob.class);
+		job.setMapperClass(PartitionTestMapper.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(ItestPairArrayWritable.class);
 		job.setCombinerClass(IndependenceTestReducer.class);
 		job.setReducerClass(IndependenceTestReducer.class);
-		job.setInputFormatClass(RandSeedInputFormat.class);
+		job.setInputFormatClass(PartitionInputFormat.class);
 		job.setNumReduceTasks(1);
 
 		//Set output paths

@@ -6,7 +6,6 @@ package smile.wide.algorithms.pc;
 import java.util.ArrayList;
 import java.util.Set;
 
-import org.apache.commons.math.util.MathUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -27,14 +26,33 @@ public class DistributedIndependenceStep extends IndependenceStep {
 		Configuration conf = new Configuration();
 		conf.setInt("nvar", d.getNumberOfVariables());
 		conf.setBoolean("disc", disc);
+		
+		int adj_limit = maxAdjacency;
+        if(disc) {
+            int min=2;
+            int nvar = ds.getNumberOfVariables();
+            for(int x=0;x<nvar;++x)
+            {
+            	int nstates = ds.getStateNames(x).length;
+                 if(x==0)
+                   min = nstates;
+                 else
+                 {
+                      if(nstates < min)
+                        min = nstates;
+                 }
+            }
+            adj_limit = (int) (Math.log(ds.getNumberOfRecords() / 5.0)/Math.log(min)-2);
+        }
+        if(adj_limit < maxAdjacency)
+        	maxAdjacency = adj_limit;
 		conf.setInt("maxAdjacency", maxAdjacency);
 		conf.setFloat("significance", (float) significance);
 		conf.set("datastorage","/user/mdejongh/datatmp");
 		conf.set("testoutput","/user/mdejongh/testoutput");
-		conf.setInt(RandSeedInputFormat.CONFKEY_SEED_COUNT, 2000);//number of mappers to be run
-		conf.setInt(RandSeedInputFormat.CONFKEY_WARMUP_ITER, 100000);
 		String[] args = {};
-		DistributedIndependenceJob job = new DistributedIndependenceJob();
+//		DistributedIndependenceJob job = new DistributedIndependenceJob();
+		PartitionIndependenceJob job = new PartitionIndependenceJob();
 		job.data = d;
 		job.pat = pat;
 		job.sepsets = sepsets;
