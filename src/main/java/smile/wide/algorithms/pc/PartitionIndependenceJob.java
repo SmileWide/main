@@ -29,6 +29,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -54,6 +55,7 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 	public Pattern pat = null;
 	public ArrayList<ArrayList<Set<Integer>>> sepsets = null;
 	private String tmpdata = "";
+	private boolean data_uploaded = false;
 	@Override
 	public int run(String[] params) throws Exception {
 		Configuration conf = super.getConf();
@@ -65,11 +67,14 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 		FileSystem dfs = FileSystem.get(conf);
 		Path datapath = new Path(tmpdata);
 
-		if(dfs.exists(datapath)) {
-			dfs.delete(datapath, true);
+		if(!data_uploaded) {
+			if(dfs.exists(datapath)) {
+				dfs.delete(datapath, true);
+			}
+			dfs.mkdirs(datapath);
+			dfs.copyFromLocalFile(new Path("tmpdata.txt"),datapath);
+			data_uploaded = true;
 		}
-		dfs.mkdirs(datapath);
-		dfs.copyFromLocalFile(new Path("tmpdata.txt"),datapath);
 		DistributedCache.addCacheFile(new URI(datapath + "/tmpdata.txt#tmpdata.txt"), conf);		
 		DistributedCache.createSymlink(conf);
 		
@@ -85,6 +90,7 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 		conf.set("mapred.compress.map.output", "true");
 		conf.set("mapred.map.output.compression.codec", "org.apache.hadoop.io.compress.SnappyCodec"); 
 		conf.setLong("mapred.task.timeout", 3600000);
+		conf.set("mapred.child.java.opts","-Xmx2048m");
 		int maxAdjacency = conf.getInt("maxAdjacency",0);
 
 		for(int adjacency = 0; adjacency <= maxAdjacency;++adjacency) {
@@ -126,7 +132,7 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 		job.setCombinerClass(IndependenceTestReducer.class);
 		job.setReducerClass(IndependenceTestReducer.class);
 		job.setInputFormatClass(PartitionInputFormat.class);
-		job.setNumReduceTasks(1);
+		job.setNumReduceTasks(10);
 
 		//Set output paths
 		Path outputPath = new Path(conf.get("testoutput"));
@@ -136,9 +142,10 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 		job.waitForCompletion(true);	
 		//download result file
 		FileSystem dfs = FileSystem.get(conf);
-		outputPath.suffix("/part-r-00000");
+		//if we have more than one reducer, loop over all.
 		String outputfile = conf.get("edgelist");
-		dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
+		FileUtil.copyMerge(dfs, outputPath, dfs, new Path("./"+outputfile), false, conf, null);
+		//dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
 		//process downloaded file
 		java.util.regex.Pattern p = java.util.regex.Pattern.compile("\\(\\((\\d+), (\\d+)\\),\\{((,?\\d+)*)\\}\\)");
 		try {

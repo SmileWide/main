@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.time.DurationFormatUtils;
+
 import smile.wide.data.DataSet;
 import smile.wide.data.SMILEData;
 import smile.wide.utils.Pattern;
@@ -237,9 +239,11 @@ public class PC {
     }
 	public static void main(String args[]) {
 		SMILEData ds = new SMILEData();
-//		ds.Read("../input/Hepar14k.txt");
+		ds.Read("../input/Hepar14k.txt");
 //		ds.Read("../input/Cpcs179.txt");
-		ds.Read("../input/HailFinder10_s500_v10.txt");
+//		ds.Read("../input/HailFinder10_s5000_v10.txt");
+//		ds.Read("../input/Gene_s5000_v10.txt");
+//		ds.Read("../input/Gene_s500_v10.txt");
 		Pattern pat = new Pattern();
 		PC alg = new PC();
 		//alg.istep = new HadoopIndependenceStep();
