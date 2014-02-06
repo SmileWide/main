@@ -16,11 +16,13 @@
 */
 package smile.wide.algorithms.pc;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
@@ -39,6 +41,7 @@ public class PartitionTestMapper extends Mapper<LongWritable, Void, Text, ItestP
 	int adjacency = 0;
 	double significance = 0.05;
 	int numberoftests = 0;
+	int maxreds = 1;
 	boolean disc = true;
 	Pattern pat = new Pattern();	
 	SMILEData ds = new SMILEData();
@@ -57,8 +60,20 @@ public class PartitionTestMapper extends Mapper<LongWritable, Void, Text, ItestP
 		adjacency = conf.getInt("adjacency", 0);
 		significance = (double) conf.getFloat("significance", (float) 0.05);
 		numberoftests = conf.getInt("numberoftests",0);
+		maxreds = conf.getInt("maxreds",1);
+
 		disc = conf.getBoolean("disc", true);
-		pat = new Pattern(conf.get("pattern"));
+        //read pattern from file
+        String patfromfile="";
+        File file = new File("tmppat.txt");
+        try {
+        	patfromfile = FileUtils.readFileToString(file);
+        }
+        catch (Exception e) {
+        }
+        pat = new Pattern(patfromfile);
+        patfromfile=null;
+        //read data
 		datafile = conf.get("thedata");
 		ds.Read(datafile);
 		int nvar = pat.getSize();
@@ -69,7 +84,7 @@ public class PartitionTestMapper extends Mapper<LongWritable, Void, Text, ItestP
         for (int i = 0; i < nvar; i++)
         {
             for (int x=0; x< nvar; x++) {
-            	sepsets.get(i).add(new HashSet<Integer>());
+            	sepsets.get(i).add(null);
             }
         }
 	}
@@ -94,7 +109,7 @@ public class PartitionTestMapper extends Mapper<LongWritable, Void, Text, ItestP
 			tresult.add(new Pair<Pair<Integer,Integer>,ArrayList<Integer>>(i,l));
 		}
 		ItestPairArrayWritable result = new ItestPairArrayWritable(tresult);
-		context.write(thekey, result);
+		context.write(new Text(Integer.toString(start%maxreds)), result);
 		ds.dispose();
 	}
 }

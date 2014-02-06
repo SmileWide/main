@@ -50,7 +50,8 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 
 	/** Path to SMILE library*/
 	private String libHDFSPath_ = "/user/mdejongh/lib/linux64";
-	int maxmaps = 2000;
+	int maxmaps = 6000;
+	int maxreds = 100;
 	public SMILEData data = null;
 	public Pattern pat = null;
 	public ArrayList<ArrayList<Set<Integer>>> sepsets = null;
@@ -89,8 +90,8 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 		conf.set("edgelist","edgelist.txt");
 		conf.set("mapred.compress.map.output", "true");
 		conf.set("mapred.map.output.compression.codec", "org.apache.hadoop.io.compress.SnappyCodec"); 
-		conf.setLong("mapred.task.timeout", 3600000);
-		conf.set("mapred.child.java.opts","-Xmx2048m");
+		conf.setLong("mapred.task.timeout", 14400000);
+		conf.set("mapred.child.java.opts","-Xmx4096m");
 		int maxAdjacency = conf.getInt("maxAdjacency",0);
 
 		for(int adjacency = 0; adjacency <= maxAdjacency;++adjacency) {
@@ -105,6 +106,7 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 			int K = (int) Math.ceil(edges/maps);
 			maps = Math.ceil(edges/K);
 			maxmaps = (int) maps;
+			maxreds = ((int) (0.1 * maps)) + 1; 
 			System.out.println("edges "+edges);
 			System.out.println("maps "+maps);
 			System.out.println("value of K: "+K);
@@ -112,6 +114,7 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 			//init RandSeedInputFormat
 			conf.setInt(PartitionInputFormat.CONFKEY_MAP_COUNT, maxmaps);//number of mappers to be run
 			conf.setInt(PartitionInputFormat.CONFKEY_INTERVAL_COUNT, K);//number of mappers to be run
+			conf.setInt("maxreds",maxreds);
 			testIndependence(conf,adjacency);
 		}
 		f.delete();
@@ -119,10 +122,14 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 	}
 
 	void testIndependence(Configuration conf, int adjacency) throws Exception {
-		conf.set("pattern",pat.toString());
 		conf.setInt("adjacency",adjacency);
 
+		//upload current pattern state
+		System.out.println("Uploading pattern");
+		uploadPattern(conf);
+		
 		//init job
+		System.out.println("init job");
 		Job job = new Job(conf);
 		job.setJobName("Partition Independence Tests Over Mappers and Collect Results, phase " + adjacency);
 		job.setJarByClass(PartitionIndependenceJob.class);
@@ -132,20 +139,22 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 		job.setCombinerClass(IndependenceTestReducer.class);
 		job.setReducerClass(IndependenceTestReducer.class);
 		job.setInputFormatClass(PartitionInputFormat.class);
-		job.setNumReduceTasks(10);
+		job.setNumReduceTasks(maxreds);
 
+		System.out.println("set output paths");
 		//Set output paths
 		Path outputPath = new Path(conf.get("testoutput"));
 		FileOutputFormat.setOutputPath(job, outputPath);
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 		//Run the job
+		System.out.println("Starting Job");
 		job.waitForCompletion(true);	
 		//download result file
 		FileSystem dfs = FileSystem.get(conf);
 		//if we have more than one reducer, loop over all.
 		String outputfile = conf.get("edgelist");
-		FileUtil.copyMerge(dfs, outputPath, dfs, new Path("./"+outputfile), false, conf, null);
-		//dfs.copyToLocalFile(outputPath.suffix("/part-r-00000"), new Path("./"+outputfile));
+		FileUtil.copyMerge(dfs, outputPath, dfs, outputPath.suffix("/"+outputfile), false, conf, null);
+		dfs.copyToLocalFile(outputPath.suffix("/"+outputfile), new Path("./"+outputfile));
 		//process downloaded file
 		java.util.regex.Pattern p = java.util.regex.Pattern.compile("\\(\\((\\d+), (\\d+)\\),\\{((,?\\d+)*)\\}\\)");
 		try {
@@ -181,5 +190,19 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	void uploadPattern(Configuration conf) throws Exception {
+		String patfile = "tmppat.txt";
+		String patstring = pat.toString();
+		PrintWriter out = new PrintWriter(patfile);
+		out.println(patstring);
+		patstring=null;
+		out.close();
+		FileSystem dfs = FileSystem.get(conf);
+		Path datapath = new Path(tmpdata);
+		dfs.copyFromLocalFile(new Path(patfile),datapath);
+		DistributedCache.addCacheFile(new URI(datapath + "/"+patfile+"#"+patfile), conf);		
+		DistributedCache.createSymlink(conf);
 	}
 }

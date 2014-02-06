@@ -41,8 +41,8 @@ public class PartitionIndependenceStep extends IndependenceStep {
         	itest = new ContIndependenceTest(ds);
 
         //save coordinates in array for easy acces from starting point
-        ArrayList<Integer> xcoord = new ArrayList<Integer>();
-        ArrayList<Integer> ycoord = new ArrayList<Integer>();
+        ArrayList<Integer> xcoord = new ArrayList<Integer>(pat.getSize());
+        ArrayList<Integer> ycoord = new ArrayList<Integer>(pat.getSize());
         for(int x = 0; x < pat.getSize(); ++x)
         	for(int y=x+1;y< pat.getSize(); ++y)
         		if(pat.getEdge(x,y) != Pattern.EdgeType.None) {
@@ -55,7 +55,7 @@ public class PartitionIndependenceStep extends IndependenceStep {
         {
         	int x = xcoord.get(i);
         	int y = ycoord.get(i);
-            HashSet<Integer> sepset= new HashSet<Integer>();
+            HashSet<Integer> sepset= new HashSet<Integer>(adjacency);
             MutableDouble mi = new MutableDouble(-1.0);
             if (itest.findCI(pat, adjacency, x, y, sepset, significance,mi,null))
             {

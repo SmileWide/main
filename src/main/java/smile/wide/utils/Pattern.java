@@ -14,7 +14,6 @@ public class Pattern {
 	public enum EdgeType {None, Undirected, Directed};
 	/**2d array that contains the adjacency matrix*/
 	ArrayList<ArrayList<EdgeType> > mat = new ArrayList<ArrayList<EdgeType> >();
-	
 	/**Empty default constructor*/
 	public Pattern() {	
 	}
@@ -172,18 +171,19 @@ public class Pattern {
 	
 	@Override 
 	public String toString() {
+		StringBuilder sb = new StringBuilder();
 		int size = getSize();
-		String value = new String();
-		value = size + "#";
+		sb.append(size);
+		sb.append("#");
 	    for (int i = 0; i < size; i++) {
 	        for (int j = 0; j < size; j++) {
 	            switch(getEdge(i,j)) {
-	            case None:value+="0";break;
-	            case Undirected:value+="1";break;
-	            case Directed:value+="2";break;
+	            case None:sb.append("0");break;
+	            case Undirected:sb.append("1");break;
+	            case Directed:sb.append("2");break;
 	            }
 	        }
 	    }
-		return value;
+		return sb.toString();
 	}
 }

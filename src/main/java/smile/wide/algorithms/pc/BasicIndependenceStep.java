@@ -51,15 +51,15 @@ public class BasicIndependenceStep extends IndependenceStep {
         }
 
         //1d arrays for nodes
-        ArrayList<Integer> nodes = new ArrayList<Integer>();
+        ArrayList<Integer> nodes = new ArrayList<Integer>(nvar);
         for(int x=0;x<nvar;++x)
         	nodes.add(x);
-        ArrayList<Double> node_array = new ArrayList<Double>();
+        ArrayList<Double> node_array = new ArrayList<Double>(nvar);
         //2d array for MI calculations
-        ArrayList<ArrayList<Double>> mi_array = new ArrayList<ArrayList<Double>>();
+        ArrayList<ArrayList<Double>> mi_array = new ArrayList<ArrayList<Double>>(nvar);
         for(int x = 0; x< nvar; x++) {
         	node_array.add(0.0);
-        	mi_array.add(new ArrayList<Double>());
+        	mi_array.add(new ArrayList<Double>(nvar));
         	for(int y = 0; y < nvar; y++) {
         		mi_array.get(x).add(0.0);
         	}
@@ -71,12 +71,12 @@ public class BasicIndependenceStep extends IndependenceStep {
 
         //for MI clusters
         LProp lp = new LProp();
-		ArrayList<Integer> clusters = new ArrayList<Integer>();
+		ArrayList<Integer> clusters = new ArrayList<Integer>(nvar);
 
 		//node exclusion
-		ArrayList<ArrayList<Boolean>> excluded = new ArrayList<ArrayList<Boolean>>();
+		ArrayList<ArrayList<Boolean>> excluded = new ArrayList<ArrayList<Boolean>>(nvar);
 		for(int x=0;x<nvar;++x) {
-			excluded.add(new ArrayList<Boolean>());
+			excluded.add(new ArrayList<Boolean>(nvar));
 			for(int y=0;y<nvar;++y)
 				excluded.get(x).add(false);
 		}
@@ -96,7 +96,7 @@ public class BasicIndependenceStep extends IndependenceStep {
                 	if (pat.getEdge(xx, yy) == Pattern.EdgeType.None && pat.getEdge(yy, xx) == Pattern.EdgeType.None) {
                         continue;
                     }
-                    HashSet<Integer> sepset= new HashSet<Integer>();
+                    HashSet<Integer> sepset= new HashSet<Integer>(card);
                     mi.setValue(0.0);
                     if (itest.findCI(pat, card, xx, yy, sepset, significance, mi, excluded)) {
                     	if(card > 0) {

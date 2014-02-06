@@ -2,7 +2,6 @@ package smile.wide;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
-import smile.wide.algorithms.independence.MinimumCutSet;
 import smile.wide.algorithms.pc.PC;
 import smile.wide.data.SMILEData;
 import smile.wide.utils.Pattern;
@@ -21,6 +20,8 @@ public class PCTest {
 		//ds.Read("input/HailFinder10_s500_v10.txt");
 		//ds.Read("input/Gene_s5000_v10.txt");
 		//ds.Read("input/Gene_s500_v10.txt");
+		//ds.Read("input/test_nci9_s3.csv");
+		//ds.Read("input/sido.txt");
 		Pattern pat = new Pattern();
 		PC alg = new PC();
 		alg.maxAdjacency = 8;

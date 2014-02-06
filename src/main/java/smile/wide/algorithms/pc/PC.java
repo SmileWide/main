@@ -27,6 +27,7 @@ public class PC {
      *  used by the independence tests*/
     public double significance=0.05;
     
+    public boolean rejectConstants = false;
 	/** sepsetHas function, checks if a variable e is present
 	 * in the separator set of variables x and y 
 	 * @param container of all sepsets, variables x, y, and e
@@ -112,7 +113,8 @@ public class PC {
                 }
             }
             //throw exception with message?
-        	throw new IllegalArgumentException("pc: constant variables not allowed: "+vars);
+            if(rejectConstants)
+            	throw new IllegalArgumentException("pc: constant variables not allowed: "+vars);//TODO: MDJ DISABLED CONSTANT CHECK
         }
         // check if there are no missing values
         for (r = 0; r < n; r++) {
@@ -123,7 +125,9 @@ public class PC {
                 }
             }
         }
-
+        tmp=null;
+        prob=null;
+        
         // step 1: create fully connected undirected graph
         // initialize pattern
         pat.setSize(nvar);
@@ -141,13 +145,13 @@ public class PC {
 
         // step 2: check for conditional independencies
         // create sepsets
-        ArrayList<ArrayList<Set<Integer> > > sepsets = new ArrayList<ArrayList<Set<Integer> > >();
+        ArrayList<ArrayList<Set<Integer> > > sepsets = new ArrayList<ArrayList<Set<Integer> > >(nvar);
         for (int x=0; x< nvar; x++) {
-        	sepsets.add(new ArrayList<Set<Integer> >());
+        	sepsets.add(new ArrayList<Set<Integer> >(nvar));
         }
         for (i = 0; i < nvar; i++) {
             for (int x=0; x< nvar; x++) {
-            	sepsets.get(i).add(new HashSet<Integer>());
+            	sepsets.get(i).add(null);//new HashSet<Integer>()
             }
         }
         //Execute the independence test step
@@ -239,11 +243,13 @@ public class PC {
     }
 	public static void main(String args[]) {
 		SMILEData ds = new SMILEData();
-		ds.Read("../input/Hepar14k.txt");
+//		ds.Read("../input/Hepar14k.txt");
 //		ds.Read("../input/Cpcs179.txt");
 //		ds.Read("../input/HailFinder10_s5000_v10.txt");
 //		ds.Read("../input/Gene_s5000_v10.txt");
 //		ds.Read("../input/Gene_s500_v10.txt");
+//		ds.Read("../input/test_nci9_s3.csv");
+		//ds.Read("../input/sido.txt");
 		Pattern pat = new Pattern();
 		PC alg = new PC();
 		//alg.istep = new HadoopIndependenceStep();
@@ -271,7 +277,30 @@ public class PC {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		//Gold Standard Procedure
+			//load data file
+			//run algorithm
+			//collect pattern
+			//store pattern to file
+			//record running time
+			//Manually: Count Number of MapReduce Job
+		
+			//On PC:
+			//load result pattern
+			//load original network
+			//generate pattern
+			//compare patterns
+			//- Hamming
+			//- Skeleton
+			//- others
 
+	   //Raw Data Procedure
+			//load data file
+			//run algorithm
+			//collect pattern
+			//store pattern to file
+			//record running time
+		
 	}
 }
 
