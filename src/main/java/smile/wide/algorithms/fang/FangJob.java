@@ -336,5 +336,29 @@ public class FangJob extends Configured implements Tool {
 		f.setOrder(order);
 		int exitCode = ToolRunner.run(conf, f, args);
 		System.exit(exitCode);
+
+		//Gold Standard Procedure
+		//load data file
+		//run algorithm
+		//collect pattern
+		//store pattern to file
+		//record running time
+		//Manually: Count Number of MapReduce Job
+	
+		//On PC:
+		//load result pattern
+		//load original network
+		//generate pattern
+		//compare patterns
+		//- Hamming
+		//- Skeleton
+		//- others
+
+   //Raw Data Procedure
+		//load data file
+		//run algorithm
+		//collect pattern
+		//store pattern to file
+		//record running time
 	}
 }

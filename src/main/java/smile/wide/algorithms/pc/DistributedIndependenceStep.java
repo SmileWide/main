@@ -11,7 +11,6 @@ import org.apache.hadoop.util.ToolRunner;
 
 import smile.wide.data.DataSet;
 import smile.wide.data.SMILEData;
-import smile.wide.hadoop.io.RandSeedInputFormat;
 import smile.wide.utils.Pattern;
 
 /**
@@ -51,7 +50,6 @@ public class DistributedIndependenceStep extends IndependenceStep {
 		conf.set("datastorage","/user/mdejongh/datatmp");
 		conf.set("testoutput","/user/mdejongh/testoutput");
 		String[] args = {};
-//		DistributedIndependenceJob job = new DistributedIndependenceJob();
 		PartitionIndependenceJob job = new PartitionIndependenceJob();
 		job.data = d;
 		job.pat = pat;
