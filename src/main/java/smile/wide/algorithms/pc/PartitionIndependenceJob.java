@@ -50,7 +50,7 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 
 	/** Path to SMILE library*/
 	private String libHDFSPath_ = "/user/mdejongh/lib/linux64";
-	int maxmaps = 6000;
+	int maxmaps = 2000;
 	int maxreds = 100;
 	public SMILEData data = null;
 	public Pattern pat = null;
@@ -160,15 +160,9 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 		try {
 			File file = new File(outputfile);
 			String data = FileUtils.readFileToString(file);
-			PrintWriter out = new PrintWriter("datacheck"+adjacency+".txt");
-			out.println(data);
-			out.close();
-			out = new PrintWriter("processeddata"+adjacency+".txt");
 			int counter = 0;
 			Matcher matcher = p.matcher(data);
 			while(matcher.find()) {
-				String test = matcher.group();
-				out.println(test);
 				int from = Integer.parseInt(matcher.group(1));
 				int to = Integer.parseInt(matcher.group(2));
 				String sep = matcher.group(3);
@@ -185,7 +179,6 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 				counter++;
 			}
 			System.out.println("removed "+counter+" edges");
-			out.close();
 		file.delete();
 		} catch (IOException e) {
 			e.printStackTrace();

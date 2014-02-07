@@ -40,7 +40,7 @@ public class PartitionIndependenceStep extends IndependenceStep {
         else
         	itest = new ContIndependenceTest(ds);
 
-        //save coordinates in array for easy acces from starting point
+        //save coordinates in array for easy access from starting point
         ArrayList<Integer> xcoord = new ArrayList<Integer>(pat.getSize());
         ArrayList<Integer> ycoord = new ArrayList<Integer>(pat.getSize());
         for(int x = 0; x < pat.getSize(); ++x)

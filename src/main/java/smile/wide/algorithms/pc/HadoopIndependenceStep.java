@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
@@ -35,7 +36,7 @@ public class HadoopIndependenceStep extends IndependenceStep {
 			//throw something
 		}
 		
-		for(int adjacency = 0; adjacency <= maxAdjacency;++adjacency) {
+		for(int adjacency = 1; adjacency <= maxAdjacency;++adjacency) {
 			Configuration conf = new Configuration();
 			conf.setBoolean("disc", disc);
 			conf.setInt("maxAdjacency", adjacency);
@@ -46,9 +47,10 @@ public class HadoopIndependenceStep extends IndependenceStep {
 			conf.set("maxpvalues","/user/mdejongh/output");
 			conf.set("edgelist","edgelist.txt");
 			conf.set("pattern",pat.toString());
+
 			String[] args = {};
-			
 			ToolRunner.run(conf, new HadoopIndependenceJob(), args);
+
 			//retrieve results here
 			try {
 				File file = new File("edgelist.txt");
@@ -66,11 +68,13 @@ public class HadoopIndependenceStep extends IndependenceStep {
 					counter++;
 					if(adjacency > 0) {
 						String[] sepset = contents[1].replace("v","").replace("{","").replace("}", "").split(",");
+						Set<Integer> tmpset = new HashSet<Integer>();
 						for(int z=0;z<sepset.length;++z) {
 							int s = Integer.decode(sepset[z]);
-							sepsets.get(x).get(y).add(s);
-							sepsets.get(y).get(x).add(s);
+							tmpset.add(s);
 						}
+						sepsets.get(x).set(y,tmpset);
+						sepsets.get(y).set(x,tmpset);
 					}
 				}
 				System.out.println("Removed " + counter + " edges this iteration!");

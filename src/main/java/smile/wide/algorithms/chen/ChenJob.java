@@ -67,6 +67,10 @@ public class ChenJob extends Configured implements Tool {
 	
 	MinimumCutSet m = null;
 	
+	public ChenJob(Pattern pat2) {
+		pat = pat2;
+	}
+
 	@Override
 	public int run(String[] params) throws Exception {
 		conf = super.getConf();
@@ -487,7 +491,6 @@ public class ChenJob extends Configured implements Tool {
 			Iterator<String> itY = cardinalities.get(y).iterator();
 			while(itY.hasNext()) {
 				String assignment_y = "v"+y+"="+itY.next();
-
 				indices.clear();
 				for(Integer z : Z)
 					indices.add(cardinalities.get(z).iterator());
@@ -541,17 +544,16 @@ public class ChenJob extends Configured implements Tool {
 	}
 		
 	/** main function, executes the job on the cluster*/
-	public static void main(String[] args) throws Exception {
+	public static int main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
 		conf.setInt("nvar", 70);
 		conf.setFloat("epsilon", (float) 0.01);
 		conf.set("datainput", "/user/mdejongh/input");
 		conf.set("countoutput", "/user/mdejongh/counts");
 		conf.set("countlist","mycounts.txt");
-		
-		int exitCode = ToolRunner.run(conf, new ChenJob(), args);
-		System.exit(exitCode);
-		
+		Pattern pat = new Pattern();
+		int exitCode = ToolRunner.run(conf, new ChenJob(pat), args);
+		return exitCode;
 		//Gold Standard Procedure
 		//load data file
 		//run algorithm

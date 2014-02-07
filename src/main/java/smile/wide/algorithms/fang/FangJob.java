@@ -68,6 +68,11 @@ public class FangJob extends Configured implements Tool {
 	int nvar = 0;
 	ArrayList<Integer> order = null;
 	
+	public FangJob(Pattern pat2) {
+		pat = pat2;
+		// TODO Auto-generated constructor stub
+	}
+
 	public void setOrder(ArrayList<Integer> o) {
 		order = o;
 	}
@@ -331,8 +336,8 @@ public class FangJob extends Configured implements Tool {
 
 		long seed = 1982;
 		Collections.shuffle(order, new Random(seed));
-		
-		FangJob f = new FangJob();
+		Pattern pat = new Pattern();
+		FangJob f = new FangJob(pat);
 		f.setOrder(order);
 		int exitCode = ToolRunner.run(conf, f, args);
 		System.exit(exitCode);
