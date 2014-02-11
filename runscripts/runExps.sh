@@ -8,6 +8,6 @@ export HADOOP_CLASSPATH=$MATH3/commons-math3-3.0.jar:$LANG3/commons-lang3-3.1.ja
 export HADOOP_CLIENT_OPTS="$HADOOP_CLIENT_OPTS -Xmx2048m"
 export HADOOP_USER_CLASSPATH_FIRST=true
 
-hadoop jar $MYJAR smile.wide.utils.ExperimentCode -libjars $MATH3/commons-math3-3.0.jar $1
+hadoop jar $MYJAR smile.wide.utils.ExperimentCode -libjars $MATH3/commons-math3-3.0.jar $1 $2
 
 

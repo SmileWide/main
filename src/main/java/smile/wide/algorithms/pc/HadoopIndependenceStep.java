@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -23,6 +24,12 @@ import smile.wide.utils.Pattern.EdgeType;
  *
  */
 public class HadoopIndependenceStep extends IndependenceStep {
+	MutableInt jcntr = new MutableInt(0);
+	
+	public HadoopIndependenceStep(MutableInt jc) {
+		jcntr = jc;
+	}
+
 	/**basic code framework to execute hadoop style stuff will be replaced with actual code*/
 	@Override
 	public void execute(DataSet ds, Pattern pat, boolean disc, int maxAdjacency, double significance, ArrayList<ArrayList<Set<Integer>>> sepsets) throws Exception {
@@ -49,7 +56,7 @@ public class HadoopIndependenceStep extends IndependenceStep {
 			conf.set("pattern",pat.toString());
 
 			String[] args = {};
-			ToolRunner.run(conf, new HadoopIndependenceJob(), args);
+			ToolRunner.run(conf, new HadoopIndependenceJob(jcntr), args);
 
 			//retrieve results here
 			try {

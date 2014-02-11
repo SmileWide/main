@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.commons.math3.util.ArithmeticUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -67,10 +68,16 @@ public class FangJob extends Configured implements Tool {
 	Configuration conf = null;
 	int nvar = 0;
 	ArrayList<Integer> order = null;
+	MutableInt jcntr = new MutableInt(0);
+	
 	
 	public FangJob(Pattern pat2) {
 		pat = pat2;
-		// TODO Auto-generated constructor stub
+	}
+
+	public FangJob(Pattern pat2, MutableInt jc) {
+		pat = pat2;
+		jcntr = jc;
 	}
 
 	public void setOrder(ArrayList<Integer> o) {
@@ -155,6 +162,7 @@ public class FangJob extends Configured implements Tool {
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 
 		//Run the job
+		jcntr.increment();
 		job.waitForCompletion(true);
 		
 		//download result file
@@ -251,6 +259,7 @@ public class FangJob extends Configured implements Tool {
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 
 		//Run the job
+		jcntr.increment();
 		job.waitForCompletion(true);
 		
 		//check if file was created previously and delete it if so
@@ -287,6 +296,7 @@ public class FangJob extends Configured implements Tool {
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 
 		//Run the job
+		jcntr.increment();
 		job.waitForCompletion(true);	
 		
 		//download result file
@@ -317,7 +327,7 @@ public class FangJob extends Configured implements Tool {
 	}
 	
 	/** main function, executes the job on the cluster*/
-	public static void main(String[] args) throws Exception {
+	public static int main(String[] args) throws Exception {
 		//define node ordering here.
 		int nvar = 70;
 		
@@ -340,30 +350,6 @@ public class FangJob extends Configured implements Tool {
 		FangJob f = new FangJob(pat);
 		f.setOrder(order);
 		int exitCode = ToolRunner.run(conf, f, args);
-		System.exit(exitCode);
-
-		//Gold Standard Procedure
-		//load data file
-		//run algorithm
-		//collect pattern
-		//store pattern to file
-		//record running time
-		//Manually: Count Number of MapReduce Job
-	
-		//On PC:
-		//load result pattern
-		//load original network
-		//generate pattern
-		//compare patterns
-		//- Hamming
-		//- Skeleton
-		//- others
-
-   //Raw Data Procedure
-		//load data file
-		//run algorithm
-		//collect pattern
-		//store pattern to file
-		//record running time
+		return exitCode;
 	}
 }

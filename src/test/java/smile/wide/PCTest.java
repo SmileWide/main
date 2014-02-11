@@ -30,7 +30,7 @@ public class PCTest {
 		long time = System.currentTimeMillis();
 		System.out.println("Test PC class");
 		//do something that takes some time...
-		pat = alg.Learn(ds);
+		alg.Learn(ds,pat);
 		System.out.println();
 		System.out.println("Result");
 		//pat.Print();

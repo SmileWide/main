@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -66,9 +67,15 @@ public class ChenJob extends Configured implements Tool {
 	int nvar = 0;
 	
 	MinimumCutSet m = null;
+	MutableInt jcntr = new MutableInt(0);
 	
 	public ChenJob(Pattern pat2) {
 		pat = pat2;
+	}
+
+	public ChenJob(Pattern pat2, MutableInt jc) {
+		pat = pat2;
+		jcntr = jc;
 	}
 
 	@Override
@@ -311,7 +318,6 @@ public class ChenJob extends Configured implements Tool {
 		}
 	}	
 	void calculateMRMI(ArrayList<Pair<Pair<Integer,Integer>,Double>> L) throws Exception {
-
 		//init job
 		Job job = new Job(conf);
 		job.setJobName("Distributed Mutual Information - Calculate Counts");
@@ -332,6 +338,7 @@ public class ChenJob extends Configured implements Tool {
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 
 		//Run the job
+		jcntr.increment();
 		job.waitForCompletion(true);
 		
 		//download result file
@@ -420,7 +427,7 @@ public class ChenJob extends Configured implements Tool {
 			else
 				ssZ += ","+i;
 		}
-		conf.set("parents", ssZ);
+		conf.set("Z", ssZ);
 		
 		//init job
 		Job job = new Job(conf);
@@ -442,6 +449,7 @@ public class ChenJob extends Configured implements Tool {
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 
 		//Run the job
+		jcntr.increment();
 		job.waitForCompletion(true);
 
 		//download result file
@@ -497,7 +505,8 @@ public class ChenJob extends Configured implements Tool {
 				indices.add(null);
 				ArrayList<String> cur_values = new ArrayList<String>();
 				for(int i=0;i<indices.size()-1;++i) {
-					cur_values.add(indices.get(i).next());
+					if(indices.get(i)!=null && indices.get(i).hasNext())
+						cur_values.add(indices.get(i).next());
 				}
 				boolean done =false;
 				while(!done) {
@@ -554,28 +563,5 @@ public class ChenJob extends Configured implements Tool {
 		Pattern pat = new Pattern();
 		int exitCode = ToolRunner.run(conf, new ChenJob(pat), args);
 		return exitCode;
-		//Gold Standard Procedure
-		//load data file
-		//run algorithm
-		//collect pattern
-		//store pattern to file
-		//record running time
-		//Manually: Count Number of MapReduce Job
-	
-		//On PC:
-		//load result pattern
-		//load original network
-		//generate pattern
-		//compare patterns
-		//- Hamming
-		//- Skeleton
-		//- others
-
-   //Raw Data Procedure
-		//load data file
-		//run algorithm
-		//collect pattern
-		//store pattern to file
-		//record running time		
 	}
 }

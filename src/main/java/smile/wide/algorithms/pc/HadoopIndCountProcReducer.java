@@ -167,6 +167,8 @@ public class HadoopIndCountProcReducer extends Reducer<Text, Text, Text, DoubleW
 			g2 += xijk*(Math.log(xijk)-logexijk);
 		}
 		g2*=2;
+		if(g2 < 0)
+			g2 = 0;
     	double pvalue = SMILEMath.gammq((double) (0.5 * dof), (0.5 * g2));
     	//String outcome = "dof " + dof + ", g2 " + g2 + ", pvalue " + pvalue;
     	if(pvalue > significance)

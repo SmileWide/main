@@ -47,8 +47,7 @@ public class PC {
 	 *  @param dataset
 	 *  @return pattern.
 	 */	
-    public Pattern Learn( DataSet ds) {
-    	Pattern pat = new Pattern();
+    public void Learn( DataSet ds, Pattern pat) {
         int nvar = ds.getNumberOfVariables();
         int n = ds.getNumberOfRecords();
         if (n < 3) {
@@ -239,7 +238,6 @@ public class PC {
             }
         }
         // done
-        return pat;
     }
 	public static void main(String args[]) {
 		SMILEData ds = new SMILEData();
@@ -256,7 +254,7 @@ public class PC {
 		alg.istep = new DistributedIndependenceStep();
 		alg.maxAdjacency = 8;
 		alg.significance = 0.05;
-		pat = alg.Learn(ds);
+		alg.Learn(ds,pat);
 		pat.Print();
 		BufferedWriter v;
 		int nvar = pat.getSize();

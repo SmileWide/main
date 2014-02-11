@@ -6,6 +6,7 @@ package smile.wide.algorithms.pc;
 import java.util.ArrayList;
 import java.util.Set;
 
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -18,6 +19,15 @@ import smile.wide.utils.Pattern;
  *
  */
 public class DistributedIndependenceStep extends IndependenceStep {
+	MutableInt jcntr = new MutableInt(0);
+	
+	public DistributedIndependenceStep() {
+	}
+
+	public DistributedIndependenceStep(MutableInt jc) {
+		jcntr = jc;
+	}
+
 	/**basic code framework to execute hadoop style stuff will be replaced with actual code*/
 	@Override
 	public void execute(DataSet ds, Pattern pat, boolean disc, int maxAdjacency, double significance, ArrayList<ArrayList<Set<Integer>>> sepsets) throws Exception {
@@ -50,7 +60,7 @@ public class DistributedIndependenceStep extends IndependenceStep {
 		conf.set("datastorage","/user/mdejongh/datatmp");
 		conf.set("testoutput","/user/mdejongh/testoutput");
 		String[] args = {};
-		PartitionIndependenceJob job = new PartitionIndependenceJob();
+		PartitionIndependenceJob job = new PartitionIndependenceJob(jcntr);
 		job.data = d;
 		job.pat = pat;
 		job.sepsets = sepsets;

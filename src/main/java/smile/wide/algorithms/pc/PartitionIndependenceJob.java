@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -57,6 +58,11 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 	public ArrayList<ArrayList<Set<Integer>>> sepsets = null;
 	private String tmpdata = "";
 	private boolean data_uploaded = false;
+	MutableInt jc = new MutableInt(0);
+	public PartitionIndependenceJob(MutableInt jcntr) {
+		jc = jcntr;
+	}
+
 	@Override
 	public int run(String[] params) throws Exception {
 		Configuration conf = super.getConf();
@@ -148,6 +154,7 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 		//Run the job
 		System.out.println("Starting Job");
+		jc.increment();
 		job.waitForCompletion(true);	
 		//download result file
 		FileSystem dfs = FileSystem.get(conf);

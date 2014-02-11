@@ -16,6 +16,7 @@
 */
 package smile.wide.algorithms.pc;
 
+import org.apache.commons.lang.mutable.MutableInt;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -38,6 +39,15 @@ import org.apache.hadoop.util.ToolRunner;
  * @author m.a.dejongh@gmail.com
  */
 public class HadoopIndependenceJob extends Configured implements Tool {
+	MutableInt jc = new MutableInt(0);
+
+	public HadoopIndependenceJob() {
+	}
+
+	public HadoopIndependenceJob(MutableInt jcntr) {
+		jc = jcntr;
+	}
+
 	/** Sets up the hadoop job and sends it to the cluster
 	 * waits for the job to be completed.*/
 	@Override
@@ -69,7 +79,6 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 		job.setReducerClass(HadoopIndCounterReducer.class);
 		job.setInputFormatClass(TextInputFormat.class);
 		job.setNumReduceTasks(240);
-
 		
 		//Set input and output paths
 		Path inputPath = new Path(conf.get("datainput"));
@@ -79,6 +88,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 
 		//Run the job
+		jc.increment();
 		job.waitForCompletion(true);	
 	}
 	
@@ -102,6 +112,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 
 		//Run the job
+		jc.increment();
 		job.waitForCompletion(true);	
 	}
 
@@ -125,6 +136,7 @@ public class HadoopIndependenceJob extends Configured implements Tool {
 		outputPath.getFileSystem(conf).delete(outputPath, true);
 
 		//Run the job
+		jc.increment();
 		job.waitForCompletion(true);
 		
 		//download result file
