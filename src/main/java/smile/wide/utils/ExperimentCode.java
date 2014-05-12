@@ -139,8 +139,8 @@ public class ExperimentCode {
 			for(int x=0;x<nvar;++x)
 				order.add(x);
 
-			long seed = 1982;
-			Collections.shuffle(order, new Random(seed));
+//			long seed = 1982;
+//			Collections.shuffle(order, new Random(seed));
 			
 			FangJob f = new FangJob(pat,jc);
 			f.setOrder(order);
@@ -185,23 +185,6 @@ public class ExperimentCode {
 		extracted = inputfile.substring(1+inputfile.lastIndexOf("/"),inputfile.lastIndexOf("."));
 		
 		ds.Read(inputfile);
-		
-		//BASIC GOLD
-//		ds.Read("../input/alarm-5000.txt");
-//		ds.Read("../input/hailfinder-5000.txt");
-//		ds.Read("../input/hepar-5000.txt");
-//		ds.Read("../input/cpcs179-5000.txt");
-		
-		//ADVANCED GOLD
-//		ds.Read("../input/Alarm10_s5000_v10.txt");
-//		ds.Read("../input/andes-5000.txt");
-//		ds.Read("../input/HailFinder10_s5000_v10.txt");
-//		ds.Read("../input/Gene_s5000_v10.txt");
-		
-		//RAW DATA
-//		ds.Read("../input/chess.txt");
-//		ds.Read("../input/mushroom.txt");
-//		ds.Read("../input/sido.txt");
 		
 		MutableInt jobcount = new MutableInt(0);
 		Pattern pat = new Pattern();
