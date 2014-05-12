@@ -105,7 +105,9 @@ public class ChenJob extends Configured implements Tool {
 		ArrayList<Pair<Pair<Integer,Integer>,Double>> removelist = new ArrayList<Pair<Pair<Integer,Integer>,Double>>();
 		
 		calculateMRMI(L);
+		int the_counter = 1;
 		for(Pair<Pair<Integer,Integer>,Double> p : L) {
+			System.out.println("drafting ["+the_counter+"/"+L.size()+"] ("+jcntr+" jobs)");
 			int x = p.getFirst().getFirst();
 			int y = p.getFirst().getSecond();
 			if(!adjacencyPaths(x,y)) {
@@ -113,26 +115,33 @@ public class ChenJob extends Configured implements Tool {
 				pat.setEdge(y, x, EdgeType.Undirected);
 				removelist.add(p);
 			}
+			the_counter++;
 		}
 		for(Pair<Pair<Integer,Integer>,Double> p : removelist)
 			L.remove(p);
 
 		//Begin [Thickening]
+		the_counter =1;
 		System.out.println("Begin Thickening");
 		for(Pair<Pair<Integer,Integer>,Double> p : L) {
 			int x = p.getFirst().getFirst();
 			int y = p.getFirst().getSecond();
-			System.out.println("-edgeNeeded("+x+","+y+")");
+			System.out.println("-edgeNeeded("+x+","+y+")"+" ["+the_counter+"/"+L.size()+"] ("+jcntr+" jobs)");
 			if(edgeNeeded(x,y)) {
 				pat.setEdge(x, y, EdgeType.Undirected);
 				pat.setEdge(y, x, EdgeType.Undirected);
 			}
+			the_counter++;
 		}
 
 		//Begin [Thinning]
 		System.out.println("Begin thinning");
+		int n = pat.getSize();
+		int edges = (n*n - n)/2;
+		the_counter=1;
 		for(int x=0;x<pat.getSize();++x) {
 			for(int y=x+1;y<pat.getSize();++y) {
+				System.out.println("thinning ["+the_counter+"/"+edges+"] ("+jcntr+" jobs)");
 				if(pat.getEdge(x,y)==EdgeType.Undirected) {
 					if(adjacencyPaths(x,y)) {
 						pat.setEdge(x, y, EdgeType.None);
@@ -144,6 +153,7 @@ public class ChenJob extends Configured implements Tool {
 						}
 					}
 				}
+				the_counter++;
 			}
 		}
 		System.out.println("Orient Edges");

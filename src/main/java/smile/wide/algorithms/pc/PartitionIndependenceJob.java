@@ -52,7 +52,7 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 	/** Path to SMILE library*/
 	private String libHDFSPath_ = "/user/mdejongh/lib/linux64";
 	int maxmaps = 2000;
-	int maxreds = 100;
+	int maxreds = 600;
 	public SMILEData data = null;
 	public Pattern pat = null;
 	public ArrayList<ArrayList<Set<Integer>>> sepsets = null;
@@ -96,7 +96,7 @@ public class PartitionIndependenceJob extends Configured implements Tool {
 		conf.set("edgelist","edgelist.txt");
 		conf.set("mapred.compress.map.output", "true");
 		conf.set("mapred.map.output.compression.codec", "org.apache.hadoop.io.compress.SnappyCodec"); 
-		conf.setLong("mapred.task.timeout", 14400000);
+		conf.setLong("mapred.task.timeout", 12*3600*1000);
 		conf.set("mapred.child.java.opts","-Xmx4096m");
 		int maxAdjacency = conf.getInt("maxAdjacency",0);
 

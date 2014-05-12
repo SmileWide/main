@@ -109,7 +109,7 @@ public class FangJob extends Configured implements Tool {
 		
 		//Fang's algorithm (sort of, it's not completely clear from their paper)
 		for(int i=0;i<nvar;++i) {
-			System.out.println("Checking node "+i);
+			System.out.println("Checking node "+i+" ("+jcntr+" jobs)");
 			Set<Integer> parents = new HashSet<Integer>();
 			double Pold = calculateScore(i);//Score for empty parent set
 			System.out.println(" Parentless score: "+Pold);
@@ -117,6 +117,7 @@ public class FangJob extends Configured implements Tool {
 			while(OkToProceed && parents.size() < maxsetsize) {
 				Pair<Integer,Double> max = new Pair<Integer,Double>();
 				//For each candidate calculate score, find max in reducers
+				System.out.println(" Find best parent candidates for "+i+"|"+parents+" ("+jcntr+" jobs)");
 				findBestCandidate(i,parents,max);
 				if(max.getSecond() > Pold) {
 					Pold = max.getSecond();
