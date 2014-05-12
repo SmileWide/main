@@ -49,7 +49,6 @@ public class IndependenceTestReducer extends Reducer<Text, ItestPairArrayWritabl
 	}
 
 	@Override
-	/** Reduce function, for now should generate counts*/
 	public void reduce(Text key, Iterable<ItestPairArrayWritable> values, Context context) throws IOException, InterruptedException {
 		//we extract all results from the input
 		//we remove any duplicate removed edges (keeping those with the smallest separator sets
